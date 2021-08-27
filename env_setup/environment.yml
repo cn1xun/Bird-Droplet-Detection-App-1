@@ -1,0 +1,28 @@
+name: bdropletapp
+channels:
+    - main
+    - pytorch
+    - conda-forge
+dependencies:
+    - python=3.8 
+    - numpy 
+    - scipy
+    - pytorch=1.9.0=py3.8_cuda11.1_cudnn8.0.5_0
+    - torchvision
+    - torchaudio
+    - cudatoolkit = 11.1
+    - ipykernel
+    - matplotlib
+    - tensorboard
+    - click
+    - plotly
+    - tqdm
+    - pip
+    - pip:
+        - opencv-python
+        - dearpygui
+
+
+    # - zipfile36
+    # - silx
+    
