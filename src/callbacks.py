@@ -156,7 +156,7 @@ def detect(sender, app_data, app):
         device=app.target_device,
         verbose=True,
     )
-    app.logger.log("end detection: {d}".format(d=app.droplet_num))
+    app.logger.log("end detection: {d}".format(d=droplet_num))
 
 
 def update_blue_offset(sender, app_data, app):

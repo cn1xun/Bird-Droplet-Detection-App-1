@@ -107,7 +107,7 @@ class app:
         self.yaxis = None
         self.blue_offset = np.array([0, 0])
         self.legend = None
-        self.batch_size=64,
+        self.batch_size = 64
         self.winsize = 10
         self.padding = 7
         self.stride = 2
@@ -117,7 +117,7 @@ class app:
         self.item_dict = {}
 
     def __load_models(self):
-        for i in range(5):
+        for i in range(4):
             model = torch.load(
                 os.path.join(os.getcwd(), "models/mt{t}".format(t=i)),
                 map_location=torch.device("cpu"),
@@ -141,7 +141,7 @@ class app:
         # add a font registry
         with dpg.font_registry():
             # add font (set as default for entire app)
-            dpg.add_font("Retron2000.ttf", 40, default_font=True)
+            dpg.add_font("src\Retron2000.ttf", 40, default_font=True)
 
     def __create_main_panel(self):
         self._create_file_selector()

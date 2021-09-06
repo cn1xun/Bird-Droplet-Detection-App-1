@@ -501,6 +501,7 @@ def droplet_detection(
     device=torch.device("cpu"),
 ):
     e_image, bf_image = droplet_imgs
+    print(droplet_imgs)
     result_dict = {}
     detection_heatmap = predict_droplet_densitymap(
         (e_image, bf_image),
@@ -516,6 +517,7 @@ def droplet_detection(
         detected_droplets = droplet_loc_filter(target_layer)
         d_counter = count_droplets(detected_droplets)
         result_dict[str(i)] = (d_counter, detected_droplets)
+    print(result_dict)
     return result_dict, detection_heatmap
 
 
