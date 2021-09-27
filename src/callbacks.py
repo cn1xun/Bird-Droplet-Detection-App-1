@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 from collections import namedtuple
-
+import core
 from matplotlib.pyplot import semilogx, show
 import torch
 import dpg_utils
@@ -138,25 +138,75 @@ def check_image_loaded(app):
     return True
 
 
-def detect(sender, app_data, app):
-    if not check_image_loaded(app):
+def detect(sender, app_data, d_app):
+    if not check_image_loaded(d_app):
         return
-    app.logger.log("start detection: tpye{d}".format(d=app.target_device))
+    d_app.logger.log("start detection: tpye{d}".format(d=d_app.target_device))
 
     droplet_num, predicted_map, predicted_heatmap = utils.binary_droplet_detection(
-        app.img_pair.blue,
-        app.img_pair.bright,
-        app.batch_size,
-        app.padding,
-        app.stride,
-        app.winsize,
+        d_app.img_pair.blue,
+        d_app.img_pair.bright,
+        d_app.batch_size,
+        d_app.padding,
+        d_app.stride,
+        d_app.winsize,
         threshold=0.7,
         erosion_iter=1,
-        model=app.models[app.target_type],
-        device=app.target_device,
+        model=d_app.models[d_app.target_type],
+        device=d_app.target_device,
         verbose=True,
     )
-    app.logger.log("end detection: {d}".format(d=droplet_num))
+    d_app.logger.log("end detection: {d}".format(d=droplet_num))
+    core.app.droplet_locs = utils.droplet_loc(predicted_map)
+    print(core.app.droplet_locs)
+    utils.pic_rectangle(core.app.droplet_locs)
+    # with dpg.window(id="button_window"):
+    #     dpg.add_button(label="Add",callback = Add,user_data=app.droplet_locs)
+    #     dpg.add_button(label="Delete",callback = Delete,user_data=app.droplet_locs)
+    #     pass
+    dpg.show_item("button_window")
+    return core.app.droplet_locs
+
+    
+def Add():
+    with dpg.handler_registry():
+        print('Add :')
+        while 1:
+            if dpg.is_item_hovered("image_plot") == True:
+                if dpg.is_item_left_clicked("image_plot") ==True:
+                    loc = dpg.get_plot_mouse_pos()
+                    # locs = droplet_loc(predicted_map)
+                    # locs.append([round(loc) for loc in loc])
+                    locs = [round(loc) for loc in loc]  
+                    core.app.droplet_locs.append(locs)
+                    utils.pic_rectangle(core.app.droplet_locs,core.app.size,update=True)
+                    break            
+    pass
+
+def Delete():
+    with dpg.handler_registry():
+        print('Delete :')
+        while 1:
+            if dpg.is_item_hovered("image_plot") == True:
+                if dpg.is_item_left_clicked("image_plot") ==True:
+                    loc = dpg.get_plot_mouse_pos()
+                    locs = [[round(loc) for loc in loc]]
+                    # print(locs[0])
+                    # [140, 141]
+                    try_locs = utils.find_rectangle(locs[0],locs,size=core.app.size)
+                    for try_loc in try_locs:
+                        if try_loc in core.app.droplet_locs:
+                            core.app.droplet_locs.remove(try_loc)
+                    print("droplet_locs",core.app.droplet_locs)
+                    utils.pic_rectangle(core.app.droplet_locs,core.app.size,update=True)
+
+                    break  
+
+    pass
+
+def Size(sender, app_data, user_data):
+    core.app.size = app_data
+    return core.app.size
 
 
 def update_blue_offset(sender, app_data, app):

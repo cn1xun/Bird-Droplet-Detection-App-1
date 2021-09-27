@@ -1,18 +1,18 @@
 import numpy as np
 import dearpygui.dearpygui as dpg
 import dearpygui.logger as dpg_logger
-from numpy.lib.function_base import append
+from numpy.lib.function_base import append, delete
 import callbacks
 import torch
 import os
 import torch.nn as nn
 from PIL import ImageOps
-
+import utils
 
 class bio_image_vgg_classification_net(nn.Module):
-    def __init__(self, class_num: int = 6, dropout_ratio: float = 0.1):
+    def __init__(self, class_num: int = 5, dropout_ratio: float = 0.1):
         super(bio_image_vgg_classification_net, self).__init__()
-        self.class_num = 6  # 5 types of bird droplet + 1 background type
+        self.class_num = 5 # 5 types of bird droplet + 1 background type
         self.conv1 = nn.Conv2d(
             in_channels=6, out_channels=96, kernel_size=7, stride=2, padding=0
         )
@@ -53,7 +53,7 @@ class bio_image_vgg_classification_net(nn.Module):
             images, _ = batch
             preds = model(images)
             all_preds = torch.cat((all_preds, preds), dim=0)
-        return all_preds
+        utils.pred_info(all_preds)
 
 
 class SlidingWindowDataset(torch.utils.data.Dataset):
@@ -107,20 +107,21 @@ class app:
         self.yaxis = None
         self.blue_offset = np.array([0, 0])
         self.legend = None
-        self.batch_size = 64
+        self.batch_size=64
         self.winsize = 10
         self.padding = 7
         self.stride = 2
         self.target_type = 0
         self.target_device = torch.device("cpu")
         self.image_loaded = False
+        self.size = 5
         self.item_dict = {}
-
+        self.droplet_locs = []
     def __load_models(self):
         for i in range(4):
             model = torch.load(
                 os.path.join(os.getcwd(), "models/mt{t}".format(t=i)),
-                map_location=torch.device("cpu"),
+                map_location=torch.device("cpu"), 
             )
             model.eval()
             self.models.append(model)
@@ -158,6 +159,7 @@ class app:
                 ),
                 id="main_panel_bright_img_id",
             )
+
             dpg.add_same_line(spacing=100)
             dpg.add_text(
                 "blue image: {img_name}".format(
@@ -167,7 +169,7 @@ class app:
                 ),
                 id="main_panel_blue_img_id",
             )
-
+            
             # dpg.add_input_int(
             #     label="blue image offset x",
             #     width=400,
@@ -212,6 +214,7 @@ class app:
             self.item_dict["detect"] = dpg.add_button(
                 label="detect", callback=callbacks.detect, user_data=self, enabled=False
             )
+            
             self.item_dict["type_radio"] = dpg.add_radio_button(
                 ("Type One", "Type Two", "Type Three", "Type Four", "Type Five"),
                 horizontal=True,
@@ -235,7 +238,6 @@ class app:
             self.item_dict["winsize"] = dpg.add_input_int(
                 label="Window Size", width=400, default_value=10, enabled=False
             )
-
             with dpg.tree_node(label="Image Series", show=True, default_open=True):
                 with dpg.plot(
                     label="Image Plot",
@@ -246,13 +248,23 @@ class app:
                     crosshairs=True,
                 ):
                     pass
+            
                     # xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x")
                     # yaxis_id = dpg.add_plot_axis(dpg.mvYAxis, label="y axis")
 
     # def __create_working_space(self):
     #     with dpg.window(label="working space", pos=(500, 500),id = "working_space_id"):
     #         pass
+            # dpg.add_button(label='set',callback = "button_window")
 
+            with dpg.window(id="button_window",show=False):
+                dpg.add_button(label="Add",callback = callbacks.Add)
+                dpg.add_button(label="Delete",callback = callbacks.Delete)
+                dpg.add_slider_int(label="Size",min_value= 2,max_value=10 ,callback=callbacks.Size)
+                pass
+              
+                
+        
     def launch(self):
         self.__load_models()
         self.__set_font()
@@ -261,12 +273,12 @@ class app:
         dpg.set_primary_window("main_panel_id", True)
         dpg.setup_viewport()
         dpg.set_viewport_title(title="Oil Droplet Detection")
-        dpg.set_viewport_pos([1000, 1000])
-        dpg.set_viewport_width(2000)
-        dpg.set_viewport_height(2000)
+        dpg.set_viewport_pos([500, 500])
+        dpg.set_viewport_width(1000)
+        dpg.set_viewport_height(1000)
         dpg.start_dearpygui()
-
-
+ 
 if __name__ == "__main__":
     app = app()
     app.launch()
+    
