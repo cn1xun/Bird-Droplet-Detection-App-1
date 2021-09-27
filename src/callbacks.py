@@ -160,10 +160,6 @@ def detect(sender, app_data, d_app):
     core.app.droplet_locs = utils.droplet_loc(predicted_map)
     print(core.app.droplet_locs)
     utils.pic_rectangle(core.app.droplet_locs)
-    # with dpg.window(id="button_window"):
-    #     dpg.add_button(label="Add",callback = Add,user_data=app.droplet_locs)
-    #     dpg.add_button(label="Delete",callback = Delete,user_data=app.droplet_locs)
-    #     pass
     dpg.show_item("button_window")
     return core.app.droplet_locs
 
