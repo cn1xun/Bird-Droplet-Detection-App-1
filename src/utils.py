@@ -7,7 +7,6 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
-from PIL import ImageOps
 import torchvision
 import tqdm
 import cv2
@@ -19,8 +18,8 @@ import json
 import core
 import random
 import math
-from PIL import Image, ImageOps
-
+from PIL import Image, ImageOps,ImageDraw
+import dearpygui.dearpygui as dpg
 
 def format_dict_str(src_dict):
     str_dict = ""
@@ -844,3 +843,52 @@ def binary_droplet_detection_heatmap(
     )
     return droplet_densitymap
 
+def pic_rectangle(locs,size = 5,outline = 'red',update = False):
+    img_path = os.path.join(os.getcwd(), "data/101_reye_3_bf.png")
+    img_width, img_height, channels, img_data = dpg.load_image(img_path)
+    #size
+    img = cv2.imread(img_path)
+    h,w,c = img.shape
+    #new_loc
+    bound = []
+    i = 0
+    n = 0
+    # print(type(locs))
+    img_bg = Image.new(mode='RGBA', size=(h, w))
+    draw = ImageDraw.Draw(img_bg)
+    for loc in locs:
+            n+=1
+            bound.append([loc[0]+size,loc[1]-size])
+            bound.append([loc[0]-size,loc[1]+size])       
+            #num
+            print('darwing',n)   
+            
+            #locs
+            x1, y1 =bound[i]
+            x2, y2 =bound[i+1]
+            i+=2
+            # outline
+            draw.rectangle((x1, y1, x2, y2), outline=outline, width=2)
+    img_bg.save('detect_img.png')
+    if update == False:
+        img_detect_path = 'detect_img.png'
+        img_detect = os.path.join(os.getcwd(), img_detect_path)
+        bg_width, bg_height, channels, bg_data = dpg.load_image(img_detect)
+        with dpg.texture_registry():
+            dpg.add_dynamic_texture(bg_width, bg_height, bg_data, id="image_bg_id")
+        dpg.add_image_series("image_bg_id",(0,bg_height), (bg_width,0), uv_min=(0, 0), uv_max=(1, 1), parent=71,label='predicted',id="predicted")
+    if update == True:
+        new_bg = os.path.join(os.getcwd(),'detect_img.png')
+        img_width, img_height, channels, img_data = dpg.load_image(new_bg)
+        dpg.set_value("image_bg_id",img_data)
+    # img_bg.show()
+
+
+def find_rectangle(loc,locs,size = 5):
+    for x in range(size):
+        for y in range(size):
+            locs.append([loc[0]-x,loc[0]+y])
+            locs.append([loc[0]+x,loc[1]+y])
+            locs.append([loc[0]-x,loc[1]-y])
+            locs.append([loc[0]+x,loc[0]-y])
+    return locs
