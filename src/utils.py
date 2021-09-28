@@ -887,6 +887,10 @@ def pic_rectangle(locs,size = 5,outline = 'red',update = False):
 def find_rectangle(loc,locs,size = 5):
     for x in range(size):
         for y in range(size):
+            locs.append([loc[0]-x,loc[1]])
+            locs.append([loc[0]+x,loc[1]])
+            locs.append([loc[0],loc[1]+y])
+            locs.append([loc[0],loc[1]-y])
             locs.append([loc[0]-x,loc[0]+y])
             locs.append([loc[0]+x,loc[1]+y])
             locs.append([loc[0]-x,loc[1]-y])
