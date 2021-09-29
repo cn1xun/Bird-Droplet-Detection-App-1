@@ -159,7 +159,9 @@ def detect(sender, app_data, d_app):
     d_app.logger.log("end detection: {d}".format(d=droplet_num))
     core.app.droplet_locs = utils.droplet_loc(predicted_map)
     print(core.app.droplet_locs)
-    utils.pic_rectangle(core.app.droplet_locs)
+    news_locs = utils.clean_similar(core.app.droplet_locs)
+    print("news_locs",news_locs)
+    utils.pic_rectangle(news_locs)
     dpg.show_item("button_window")
     return core.app.droplet_locs
 
