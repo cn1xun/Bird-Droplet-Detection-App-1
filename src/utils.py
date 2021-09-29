@@ -896,3 +896,24 @@ def find_rectangle(loc,locs,size = 5):
             locs.append([loc[0]-x,loc[1]-y])
             locs.append([loc[0]+x,loc[0]-y])
     return locs
+
+def clean_similar(droplet_locs,size = 4):
+    n = 0
+    for loc in droplet_locs:
+        n += 1
+        print("loc",loc,n)
+        pr_locs = []
+        for x in range(1,size):
+            for y in range(1,size):
+                pr_locs.append([loc[0]-x,loc[1]])
+                pr_locs.append([loc[0]+x,loc[1]])
+                pr_locs.append([loc[0],loc[1]+y])
+                pr_locs.append([loc[0],loc[1]-y])
+                pr_locs.append([loc[0]-x,loc[1]+y])
+                pr_locs.append([loc[0]+x,loc[1]+y])
+                pr_locs.append([loc[0]-x,loc[1]-y])
+                pr_locs.append([loc[0]+x,loc[1]-y])
+        for pr_loc in pr_locs:
+            if pr_loc in droplet_locs:
+                droplet_locs.remove(pr_loc)   
+    return droplet_locs 
