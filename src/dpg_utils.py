@@ -1,16 +1,22 @@
 import dearpygui.dearpygui as dpg
 import numpy as np
 import matplotlib.pyplot as plt
+import core
 
-
-def add_image(imgae_path, id):
-    im = plt.imread(imgae_path) / 255.0
-    height, width, channels = im.shape
-    im = np.append(im, np.ones((height, width, 1)), 2)
+def add_images_texture(width, height ,data ,id):
     with dpg.texture_registry():
-        dpg.add_dynamic_texture(width, height, im, id=id)
-    return width, height
+        dpg.add_dynamic_texture(width, height, data, id=id)
 
+def add_images_series(type,width,height):
+    dpg.add_image_series(
+        type+"texture",
+        (0,height),
+        (width,0),
+        uv_min=(0, 0),
+        uv_max=(1, 1),
+        show =True,
+        parent=70,
+        label=type)
 
 def add_heatmap_image(w, h, id):
     texture_buffer = np.ones((w, h, 4))

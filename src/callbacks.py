@@ -6,6 +6,8 @@ import torch
 import dpg_utils
 import numpy as np
 import utils
+import os
+from PIL import Image
 
 ImgPathPair = namedtuple("ImgPair", ["bright", "blue"])
 
@@ -29,9 +31,9 @@ class cell_info:
 
 
 def file_selector_callback(sender, app_data, app):
-    img_keys = []
-    img_types = []
     img_path = []
+    img_keys = []
+    img_types = []   
     for img_name in app_data["selections"].keys():
         img_path.append(app_data["selections"][img_name])
         name_features = str(img_name).split(".")[0].split("_")
@@ -59,7 +61,7 @@ def file_selector_callback(sender, app_data, app):
             br_img_name=img_pair.bright, bl_img_name=img_pair.blue
         )
     )
-
+    
     # set new image pair path
     app.img_pair = img_pair
     # update text in main panel
@@ -78,11 +80,24 @@ def file_selector_callback(sender, app_data, app):
     # clear previous images
     dpg_utils.clear_drawlist(app.texture_ids)
     # add images to working space
+    img_br = os.path.join(os.getcwd(), img_path[0])
+    img_bl = os.path.join(os.getcwd(), img_path[1])
+    # print('img',img)
+    br_w, br_h, channels, data_br = dpg.load_image(img_br)
+    bl_w, bl_h, channels, data_bl = dpg.load_image(img_bl)
+    app.img_width = br_w
+    app.img_height = br_h
+    # print("file_selector_callback")
+    # print(app.img_width)
+    # print(app.img_height)
+    # with dpg.texture_registry() as reg_id:
+    #     dpg.add_static_texture(width, height, data, id="image_id",parent= reg_id)
     if app.xaxis is None:
         app.xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x axis", parent="image_plot")
     if app.yaxis is None:
         app.yaxis = dpg.add_plot_axis(dpg.mvYAxis, label="y axis", parent="image_plot")
-    br_w, br_h = dpg_utils.add_image(img_pair.bright, app.texture_ids[0])
+    # print(app.yaxis)
+    dpg_utils.add_images_texture(br_w,br_h,data_br, app.texture_ids[0])
     br_size = np.array([br_w, br_h])
     br_loc = np.array([0, 0])
     br_cell = cell_info(app.texture_ids[0], br_size, br_loc)
@@ -94,7 +109,7 @@ def file_selector_callback(sender, app_data, app):
         parent=app.yaxis,
     )
     br_cell.ref = br_tex_ref
-    bl_w, bl_h = dpg_utils.add_image(img_pair.blue, app.texture_ids[1])
+    dpg_utils.add_images_texture(bl_w,bl_h,data_bl, app.texture_ids[1])
     bl_size = np.array([bl_w, bl_h])
     bl_loc = np.array([0, 0])
     bl_cell = cell_info(app.texture_ids[1], bl_size, bl_loc)
@@ -117,7 +132,6 @@ def file_selector_callback(sender, app_data, app):
         label=app.texture_ids[2],
         parent=app.yaxis,
     )
-
     hm_cell.ref = hm_tex_ref
     dpg.fit_axis_data(app.xaxis)
     dpg.fit_axis_data(app.yaxis)
@@ -128,7 +142,26 @@ def file_selector_callback(sender, app_data, app):
     # inform app that the image is loaed
     app.image_loaded = True
     enable_all_items(app)
-    # print(dpg.get_item_configuration(app.legend))
+    # w = br_w
+    # h = br_h
+    # if os.path.exists('empty.png') == False:
+    img_bg = Image.new(mode='RGBA', size=(br_h, br_w))
+    img_bg.save('empty.png')
+    img_detect_path = 'empty.png'
+    img_detect = os.path.join(os.getcwd(), img_detect_path)
+    w, h,channels, data = dpg.load_image(img_detect)
+    # print("load_image",w,h)
+    names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
+    dpg_utils.add_images_texture(w,h,data,names[0]+"texture")
+    dpg_utils.add_images_series(names[0],w,h)
+    dpg_utils.add_images_texture(w,h,data,names[1]+"texture")
+    dpg_utils.add_images_series(names[1],w,h)
+    dpg_utils.add_images_texture(w,h,data,names[2]+"texture")
+    dpg_utils.add_images_series(names[2],w,h)
+    dpg_utils.add_images_texture(w,h,data,names[3]+"texture")
+    dpg_utils.add_images_series(names[3],w,h)
+    dpg_utils.add_images_texture(w,h,data,names[4]+"texture")
+    dpg_utils.add_images_series(names[4],w,h)
 
 
 def check_image_loaded(app):
@@ -138,32 +171,30 @@ def check_image_loaded(app):
     return True
 
 
-def detect(sender, app_data, d_app):
-    if not check_image_loaded(d_app):
+def detect(sender, app_data, app):
+    if not check_image_loaded(app):
         return
-    d_app.logger.log("start detection: tpye{d}".format(d=d_app.target_device))
-
+    app.logger.log("start detection: tpye{d}".format(d=app.target_device))
     droplet_num, predicted_map, predicted_heatmap = utils.binary_droplet_detection(
-        d_app.img_pair.blue,
-        d_app.img_pair.bright,
-        d_app.batch_size,
-        d_app.padding,
-        d_app.stride,
-        d_app.winsize,
+        app.img_pair.blue,
+        app.img_pair.bright,
+        app.batch_size,
+        app.padding,
+        app.stride,
+        app.winsize,
         threshold=0.7,
         erosion_iter=1,
-        model=d_app.models[d_app.target_type],
-        device=d_app.target_device,
+        model=app.models[app.target_type],
+        device=app.target_device,
         verbose=True,
     )
-    d_app.logger.log("end detection: {d}".format(d=droplet_num))
-    core.app.droplet_locs = utils.droplet_loc(predicted_map)
-    print(core.app.droplet_locs)
-    news_locs = utils.clean_similar(core.app.droplet_locs)
-    print("news_locs",news_locs)
-    utils.pic_rectangle(news_locs)
+    # type droplet_num
+    app.logger.log("end detection: {d}".format(d=droplet_num))
+    news_locs = utils.droplet_loc(predicted_map)
+    app.droplet_dict_locs[app.type] = utils.clean_similar(news_locs)
+    # print("news_locs",news_locs)
+    utils.pic_rectangle(app.type,app.droplet_dict_locs[app.type],outline = app.droplet_dict_colors[app.type])
     dpg.show_item("button_window")
-    return core.app.droplet_locs
 
     
 def Add():
@@ -202,10 +233,30 @@ def Delete():
 
     pass
 
-def Size(sender, app_data, user_data):
-    core.app.size = app_data
-    return core.app.size
+def Size(sender, app_data, app):
+    app.size = app_data
+    utils.pic_rectangle(
+        app.type,
+        app.droplet_dict_locs[app.type],
+        app.size,
+        app.droplet_dict_colors[app.type]
+        )
+    return app.size
 
+def Color(sender, app_data, app):
+    # app.droplet_dict_colors = app_data
+    new_color = dpg.get_value(sender)
+    color=[]
+    for i in new_color:
+        color.append(int(i))
+    color_tuple = tuple(color)   
+    print("color_tuple",color_tuple)
+    utils.pic_rectangle(
+        app.type,
+        app.droplet_dict_locs[app.type],
+        app.size,
+        color_tuple
+        )
 
 def update_blue_offset(sender, app_data, app):
     if not check_image_loaded(app):

@@ -519,6 +519,20 @@ def droplet_detection(
     print(result_dict)
     return result_dict, detection_heatmap
 
+def droplet_loc(predicted_map):
+    cell_bool = predicted_map > 0
+    locs = np.where(cell_bool)
+    w,h = predicted_map.shape
+    x_locs = w - locs[0] - 8
+    y_locs = locs[1] - 8
+    list_x_locs = x_locs.tolist()
+    list_y_locs = y_locs.tolist()
+    locs = []
+    for i in range(0,len(list_x_locs)):   
+        locs.append([list_y_locs[i],list_x_locs[i]])
+        # print(i)
+    # print(locs)
+    return locs
 
 def binary_droplet_detection(
     e_image_name,
@@ -843,7 +857,7 @@ def binary_droplet_detection_heatmap(
     )
     return droplet_densitymap
 
-def pic_rectangle(locs,size = 5,outline = 'red',update = False):
+def pic_rectangle(name,locs,size = 6,outline = 'red',update = False):
     img_path = os.path.join(os.getcwd(), "data/101_reye_3_bf.png")
     img_width, img_height, channels, img_data = dpg.load_image(img_path)
     #size
@@ -868,23 +882,14 @@ def pic_rectangle(locs,size = 5,outline = 'red',update = False):
             x2, y2 =bound[i+1]
             i+=2
             # outline
-            draw.rectangle((x1, y1, x2, y2), outline=outline, width=2)
+            draw.rectangle((x1, y1, x2, y2), outline=outline, width=1)
     img_bg.save('detect_img.png')
-    if update == False:
-        img_detect_path = 'detect_img.png'
-        img_detect = os.path.join(os.getcwd(), img_detect_path)
-        bg_width, bg_height, channels, bg_data = dpg.load_image(img_detect)
-        with dpg.texture_registry():
-            dpg.add_dynamic_texture(bg_width, bg_height, bg_data, id="image_bg_id")
-        dpg.add_image_series("image_bg_id",(0,bg_height), (bg_width,0), uv_min=(0, 0), uv_max=(1, 1), parent=71,label='predicted',id="predicted")
-    if update == True:
-        new_bg = os.path.join(os.getcwd(),'detect_img.png')
-        img_width, img_height, channels, img_data = dpg.load_image(new_bg)
-        dpg.set_value("image_bg_id",img_data)
-    # img_bg.show()
+    new_bg = os.path.join(os.getcwd(),'detect_img.png')
+    img_width, img_height, channels, img_data = dpg.load_image(new_bg)
+    dpg.set_value(name+'texture',img_data)
 
 
-def find_rectangle(loc,locs,size = 5):
+def find_rectangle(loc,locs,size = 7):
     for x in range(size):
         for y in range(size):
             locs.append([loc[0]-x,loc[1]])

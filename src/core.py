@@ -101,6 +101,8 @@ class app:
         dpg.set_item_pos(self.logger.window_id, [1000, 0])
         self.models = []
         self.gallery = []
+        self.names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
+        self.type = "Type One"
         self.texture_ids = ["Bright_Field", "Blue_Field", "Heatmap"]
         self.image_spacing = 20
         self.xaxis = None
@@ -114,11 +116,12 @@ class app:
         self.target_type = 0
         self.target_device = torch.device("cpu")
         self.image_loaded = False
-        self.size = 5
+        self.size = 6
         self.item_dict = {}
-        self.droplet_locs = []
+        self.droplet_dict_locs = {"Type One":None, "Type Two":None, "Type Three":None, "Type Four":None, "Type Five":None}
+        self.droplet_dict_colors = {"Type One":"red", "Type Two":"white", "Type Three":"green", "Type Four":"yellow", "Type Five":"blue"}
     def __load_models(self):
-        for i in range(4):
+        for i in range(5):
             model = torch.load(
                 os.path.join(os.getcwd(), "models/mt{t}".format(t=i)),
                 map_location=torch.device("cpu"), 
@@ -257,11 +260,11 @@ class app:
     #         pass
             # dpg.add_button(label='set',callback = "button_window")
 
-            with dpg.window(id="button_window",show=False):
-                dpg.add_button(label="Add",callback = callbacks.Add)
-                dpg.add_button(label="Delete",callback = callbacks.Delete)
-                dpg.add_slider_int(label="Size",min_value= 2,max_value=10 ,callback=callbacks.Size)
-                pass
+            with dpg.window(id="button_window",width=400,height=60,show=False):
+                self.item_dict["Add"] = dpg.add_button(label="Add",callback = callbacks.Add,user_data=self)
+                self.item_dict["Delete"] = dpg.add_button(label="Delete",callback = callbacks.Delete,user_data=self)
+                self.item_dict["Size"] = dpg.add_slider_int(label="Size",default_value=6,min_value= 4,max_value=10 ,callback=callbacks.Size,user_data=self)
+                self.item_dict["color"] = dpg.add_color_picker(label="Color",no_side_preview=True,display_hex=False,callback=callbacks.Color,user_data=self)
               
                 
         
