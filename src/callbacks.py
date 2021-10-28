@@ -40,12 +40,12 @@ def file_selector_callback(sender, app_data, app):
         img_types.append(name_features[-1].lower())
         img_keys.append("_".join(name_features[:-1]))
     if img_keys.count(img_keys[0]) != len(img_keys):
-        app.logger.log_warning(
+        print(
             "two images does not have the same key: {keys}".format(img_keys)
         )
         return
     if not ("bf" in img_types and "e" in img_types):
-        app.logger.log_warning(
+        print(
             "the type of the two images should be 'bf' or 'e': {types}".format(
                 types=img_types
             )
@@ -56,7 +56,7 @@ def file_selector_callback(sender, app_data, app):
     elif img_types[0] == "e":
         img_pair = ImgPathPair(bright=img_path[1], blue=img_path[0])
 
-    app.logger.log(
+    print(
         "record target image paths: \n\t1)[bright] {br_img_name}\n\t2)[blue] {bl_img_name}".format(
             br_img_name=img_pair.bright, bl_img_name=img_pair.blue
         )
@@ -166,7 +166,7 @@ def file_selector_callback(sender, app_data, app):
 
 def check_image_loaded(app):
     if not app.image_loaded:
-        app.logger.log_error("images are not loaded")
+        print("images are not loaded")
         return False
     return True
 
@@ -174,7 +174,7 @@ def check_image_loaded(app):
 def detect(sender, app_data, app):
     if not check_image_loaded(app):
         return
-    app.logger.log("start detection: tpye{d}".format(d=app.target_device))
+    print("start detection: tpye{d}".format(d=app.target_device))
     droplet_num, predicted_map, predicted_heatmap = utils.binary_droplet_detection(
         app.img_pair.blue,
         app.img_pair.bright,
@@ -189,7 +189,7 @@ def detect(sender, app_data, app):
         verbose=True,
     )
     # type droplet_num
-    app.logger.log("end detection: {d}".format(d=droplet_num))
+    print("end detection: {d}".format(d=droplet_num))
     news_locs = utils.droplet_loc(predicted_map)
     app.droplet_dict_locs[app.type] = utils.clean_similar(news_locs)
     # print("news_locs",news_locs)
@@ -303,17 +303,17 @@ def swtich_target_type(sender, app_data, app):
     names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
     target_type = names.index(app_data)
     app.target_type = target_type
-    app.logger.log("ctarget type: {d}".format(d=names[app.target_type]))
+    print("ctarget type: {d}".format(d=names[app.target_type]))
 
 
 def set_device(sender, app_data, app):
     if app_data == "cpu":
         app.target_device = torch.device("cpu")
     elif app_data == "gpu":
-        app.logger.log("cuda available: {d}".format(d=torch.cuda.is_available()))
+        print("cuda available: {d}".format(d=torch.cuda.is_available()))
         if torch.cuda.is_available():
             app.target_device = torch.device("cuda")
-    app.logger.log("current device: {d}".format(d=app.target_device))
+    print("current device: {d}".format(d=app.target_device))
 
 
 def enable_all_items(app):
