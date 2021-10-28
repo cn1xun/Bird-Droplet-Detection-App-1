@@ -265,7 +265,12 @@ class app:
                 self.item_dict["Delete"] = dpg.add_button(label="Delete",callback = callbacks.Delete,user_data=self)
                 self.item_dict["Size"] = dpg.add_slider_int(label="Size",default_value=6,min_value= 4,max_value=10 ,callback=callbacks.Size,user_data=self)
                 self.item_dict["color"] = dpg.add_color_picker(label="Color",no_side_preview=True,display_hex=False,callback=callbacks.Color,user_data=self)
-              
+            with dpg.window(id="Droplet",label="Droplet",width=350,height=350,show=False):
+                self.Type_One = dpg.add_text("Type One : {d}".format(d=None))    
+                self.Type_Two = dpg.add_text("Type Two : {d}".format(d=None))
+                self.Type_Three = dpg.add_text("Type Three : {d}".format(d=None))
+                self.Type_Four = dpg.add_text("Type Four : {d}".format(d=None))
+                self.Type_Five = dpg.add_text("Type Five : {d}".format(d=None))             
                 
         
     def launch(self):
