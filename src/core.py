@@ -247,7 +247,11 @@ class app:
     #         pass
             # dpg.add_button(label='set',callback = "button_window")
 
+<<<<<<< HEAD
             with dpg.window(tag="button_window",width=400,height=60,show=False):
+=======
+            with dpg.window(id="button_window",width=400,height=600,show=False):
+>>>>>>> 9c03e181ae1911f72308d1424a9feb04f4a28644
                 self.item_dict["Add"] = dpg.add_button(label="Add",callback = callbacks.Add,user_data=self)
                 self.item_dict["Delete"] = dpg.add_button(label="Delete",callback = callbacks.Delete,user_data=self)
                 self.item_dict["Size"] = dpg.add_slider_int(label="Size",default_value=6,min_value= 4,max_value=10 ,callback=callbacks.Size,user_data=self)

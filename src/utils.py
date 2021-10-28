@@ -519,10 +519,9 @@ def droplet_detection(
     print(result_dict)
     return result_dict, detection_heatmap
 
-def droplet_loc(predicted_map):
+def droplet_loc(predicted_map,w):
     cell_bool = predicted_map > 0
     locs = np.where(cell_bool)
-    w,h = predicted_map.shape
     x_locs = w - locs[0] - 8
     y_locs = locs[1] - 8
     list_x_locs = x_locs.tolist()

@@ -124,6 +124,7 @@ def file_selector_callback(sender, app_data, app):
     img_bg.save("empty.png")
     img_detect_path = "empty.png"
     img_detect = os.path.join(os.getcwd(), img_detect_path)
+<<<<<<< HEAD
     w, h, channels, data = dpg.load_image(img_detect)
     # print("load_image",w,h)
     names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
@@ -137,11 +138,26 @@ def file_selector_callback(sender, app_data, app):
     dpg_utils.add_images_series(names[3], w, h)
     dpg_utils.add_images_texture(w, h, data, names[4] + "texture")
     dpg_utils.add_images_series(names[4], w, h)
+=======
+    w, h,channels, data = dpg.load_image(img_detect)
+    print("load_image",w,h)
+    names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
+    dpg_utils.add_images_texture(w,h,data,names[0]+"texture")
+    dpg_utils.add_images_series(names[0],w,h,app.yaxis)
+    dpg_utils.add_images_texture(w,h,data,names[1]+"texture")
+    dpg_utils.add_images_series(names[1],w,h,app.yaxis)
+    dpg_utils.add_images_texture(w,h,data,names[2]+"texture")
+    dpg_utils.add_images_series(names[2],w,h,app.yaxis)
+    dpg_utils.add_images_texture(w,h,data,names[3]+"texture")
+    dpg_utils.add_images_series(names[3],w,h,app.yaxis)
+    dpg_utils.add_images_texture(w,h,data,names[4]+"texture")
+    dpg_utils.add_images_series(names[4],w,h,app.yaxis)
+>>>>>>> 9c03e181ae1911f72308d1424a9feb04f4a28644
 
 
 def check_image_loaded(app):
     if not app.image_loaded:
-        print("images are not loaded")
+        app.logger.log_error("images are not loaded")
         return False
     return True
 
@@ -149,7 +165,7 @@ def check_image_loaded(app):
 def detect(sender, app_data, app):
     if not check_image_loaded(app):
         return
-    print("start detection: tpye{d}".format(d=app.target_device))
+    app.logger.log("start detection: tpye{d}".format(d=app.target_device))
     droplet_num, predicted_map, predicted_heatmap = utils.binary_droplet_detection(
         app.img_pair.blue,
         app.img_pair.bright,
@@ -164,8 +180,20 @@ def detect(sender, app_data, app):
         verbose=True,
     )
     # type droplet_num
-    print("end detection: {d}".format(d=droplet_num))
-    news_locs = utils.droplet_loc(predicted_map)
+    app.logger.log("end detection: {d}".format(d=droplet_num))
+    # set text
+    if app.type == "Type One":
+        dpg.set_value(app.Type_One,"{t}: {d}".format(t=app.type,d=droplet_num))
+    elif app.type == "Type Two":
+        dpg.set_value(app.Type_Two,"{t}: {d}".format(t=app.type,d=droplet_num))
+    elif app.type == "Type Three":
+        dpg.set_value(app.Type_Three,"{t}: {d}".format(t=app.type,d=droplet_num))
+    elif app.type == "Type Four":
+        dpg.set_value(app.Type_Four,"{t}: {d}".format(t=app.type,d=droplet_num))
+    elif app.type == "Type Five":
+        dpg.set_value(app.Type_Five,"{t}: {d}".format(t=app.type,d=droplet_num))
+    w,h = predicted_map.shape
+    news_locs = utils.droplet_loc(predicted_map,w)
     app.droplet_dict_locs[app.type] = utils.clean_similar(news_locs)
     # print("news_locs",news_locs)
     utils.pic_rectangle(
@@ -174,8 +202,15 @@ def detect(sender, app_data, app):
         outline=app.droplet_dict_colors[app.type],
     )
     dpg.show_item("button_window")
+<<<<<<< HEAD
 
 
+=======
+    dpg.show_item("Droplet")
+    # set heatmapp
+    dpg.add_heat_series(predicted_heatmap, w, h, scale_min=0, scale_max=100,bounds_min=(0,0),bounds_max=(w,h), parent=app.yaxis,label='Heat map')
+    
+>>>>>>> 9c03e181ae1911f72308d1424a9feb04f4a28644
 def Add():
     with dpg.handler_registry():
         print("Add :")
@@ -287,17 +322,17 @@ def swtich_target_type(sender, app_data, app):
     names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
     target_type = names.index(app_data)
     app.target_type = target_type
-    print("ctarget type: {d}".format(d=names[app.target_type]))
+    app.logger.log("ctarget type: {d}".format(d=names[app.target_type]))
 
 
 def set_device(sender, app_data, app):
     if app_data == "cpu":
         app.target_device = torch.device("cpu")
     elif app_data == "gpu":
-        print("cuda available: {d}".format(d=torch.cuda.is_available()))
+        app.logger.log("cuda available: {d}".format(d=torch.cuda.is_available()))
         if torch.cuda.is_available():
             app.target_device = torch.device("cuda")
-    print("current device: {d}".format(d=app.target_device))
+    app.logger.log("current device: {d}".format(d=app.target_device))
 
 
 def enable_all_items(app):

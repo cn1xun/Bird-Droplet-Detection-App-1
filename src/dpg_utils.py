@@ -18,19 +18,29 @@ def add_images_texture(width, height, data, id):
     with dpg.texture_registry():
         dpg.add_dynamic_texture(width, height, data, id=id)
 
+<<<<<<< HEAD
 
 def add_images_series(type, width, height):
+=======
+def add_images_series(type,width,height,parent=76):
+>>>>>>> 9c03e181ae1911f72308d1424a9feb04f4a28644
     dpg.add_image_series(
         type + "texture",
         (0, height),
         (width, 0),
         uv_min=(0, 0),
         uv_max=(1, 1),
+<<<<<<< HEAD
         show=True,
         parent=70,
         label=type,
     )
 
+=======
+        show =True,
+        parent=parent,
+        label=type)
+>>>>>>> 9c03e181ae1911f72308d1424a9feb04f4a28644
 
 def add_heatmap_image(w, h, id):
     texture_buffer = np.ones((w, h, 4))
