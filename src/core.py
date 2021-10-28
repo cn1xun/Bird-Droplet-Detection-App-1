@@ -1,7 +1,5 @@
 import numpy as np
 import dearpygui.dearpygui as dpg
-import dearpygui.logger as dpg_logger
-from numpy.lib.function_base import append, delete
 import callbacks
 import torch
 import os
@@ -97,8 +95,6 @@ class SlidingWindowDataset(torch.utils.data.Dataset):
 class app:
     def __init__(self) -> None:
         self.img_pair = callbacks.ImgPathPair(bright=None, blue=None)
-        self.logger = dpg_logger.mvLogger()
-        dpg.set_item_pos(self.logger.window_id, [1000, 0])
         self.models = []
         self.gallery = []
         self.names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
@@ -120,6 +116,10 @@ class app:
         self.item_dict = {}
         self.droplet_dict_locs = {"Type One":None, "Type Two":None, "Type Three":None, "Type Four":None, "Type Five":None}
         self.droplet_dict_colors = {"Type One":"red", "Type Two":"white", "Type Three":"green", "Type Four":"yellow", "Type Five":"blue"}
+        self.default_font = None
+        dpg.create_context()
+        dpg.create_viewport(title='Custom Title', width=1920, height=1080)
+
     def __load_models(self):
         for i in range(5):
             model = torch.load(
@@ -145,32 +145,33 @@ class app:
         # add a font registry
         with dpg.font_registry():
             # add font (set as default for entire app)
-            dpg.add_font("src\Retron2000.ttf", 40, default_font=True)
+            self.default_font = dpg.add_font("Retron2000.ttf", 40)
+            # set font of specific widget
+        dpg.bind_font(self.default_font)
+
 
     def __create_main_panel(self):
         self._create_file_selector()
-        with dpg.window(label="Main", width=1500, height=300, id="main_panel_id"):
+        with dpg.window(label="Main", width=1920, height=1080, id="main_panel_id"):
             self.item_dict["image_selector"] = dpg.add_button(
                 label="Image Selector", callback=lambda: dpg.show_item("file_dialog_id")
             )
-            dpg.add_same_line(spacing=100)
             dpg.add_text(
                 "bright image: {img_name}".format(
                     img_name=""
                     if self.img_pair.bright is None
                     else self.img_pair.bright.split("/")[-1],
                 ),
-                id="main_panel_bright_img_id",
+                tag="main_panel_bright_img_id",
             )
 
-            dpg.add_same_line(spacing=100)
             dpg.add_text(
                 "blue image: {img_name}".format(
                     img_name=""
                     if self.img_pair.blue is None
                     else self.img_pair.blue.split("/")[-1],
                 ),
-                id="main_panel_blue_img_id",
+                tag="main_panel_blue_img_id",
             )
             
             # dpg.add_input_int(
@@ -204,7 +205,6 @@ class app:
                 user_data=app,
                 enabled=False,
             )
-            dpg.add_same_line(spacing=100)
 
             self.item_dict["num_threads"] = dpg.add_input_int(
                 label="num threads",
@@ -260,7 +260,7 @@ class app:
     #         pass
             # dpg.add_button(label='set',callback = "button_window")
 
-            with dpg.window(id="button_window",width=400,height=60,show=False):
+            with dpg.window(id="button_window",width=400,height=600,show=False):
                 self.item_dict["Add"] = dpg.add_button(label="Add",callback = callbacks.Add,user_data=self)
                 self.item_dict["Delete"] = dpg.add_button(label="Delete",callback = callbacks.Delete,user_data=self)
                 self.item_dict["Size"] = dpg.add_slider_int(label="Size",default_value=6,min_value= 4,max_value=10 ,callback=callbacks.Size,user_data=self)
@@ -275,16 +275,23 @@ class app:
         
     def launch(self):
         self.__load_models()
+        print("load models")
         self.__set_font()
+        print("set font")
         self.__create_main_panel()
         # self.__create_working_space()
         dpg.set_primary_window("main_panel_id", True)
-        dpg.setup_viewport()
-        dpg.set_viewport_title(title="Oil Droplet Detection")
-        dpg.set_viewport_pos([500, 500])
-        dpg.set_viewport_width(1000)
-        dpg.set_viewport_height(1000)
+        # dpg.setup_viewport()
+        # dpg.set_viewport_title(title="Oil Droplet Detection")
+        # dpg.set_viewport_pos([500, 500])
+        # dpg.set_viewport_width(1000)
+        # dpg.set_viewport_height(1000)
+        dpg.show_font_manager()
+        dpg.setup_dearpygui()
+        dpg.show_viewport()
         dpg.start_dearpygui()
+        dpg.destroy_context()
+
  
 if __name__ == "__main__":
     app = app()
