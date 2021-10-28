@@ -6,7 +6,7 @@ import os
 import torch.nn as nn
 from PIL import ImageOps
 import utils
-
+import tags
 class bio_image_vgg_classification_net(nn.Module):
     def __init__(self, class_num: int = 5, dropout_ratio: float = 0.1):
         super(bio_image_vgg_classification_net, self).__init__()
@@ -99,7 +99,7 @@ class app:
         self.gallery = []
         self.names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
         self.type = "Type One"
-        self.texture_ids = ["Bright_Field", "Blue_Field", "Heatmap"]
+        self.texture_tags = ["Bright_Field", "Blue_Field", "Heatmap"]
         self.image_spacing = 20
         self.xaxis = None
         self.yaxis = None
@@ -133,63 +133,50 @@ class app:
         with dpg.file_dialog(
             directory_selector=False,
             show=False,
-            id="file_dialog_id",
+            tag=tags.item_tags.image_file_dialog,
             file_count=2,
             callback=callbacks.file_selector_callback,
             user_data=self,
         ):
             dpg.add_file_extension(".*", color=(255, 255, 255, 255))
             dpg.add_file_extension(".png", color=(0, 255, 0, 255))
+            dpg.add_file_extension(".tiff", color=(0, 255, 0, 255))
 
     def __set_font(self):
         # add a font registry
         with dpg.font_registry():
             # add font (set as default for entire app)
-            self.default_font = dpg.add_font("Retron2000.ttf", 40)
-            # set font of specific widget
+            self.default_font = dpg.add_font("Retron2000.ttf", 20)
         dpg.bind_font(self.default_font)
-
+    def __create_ui(self):
+        self._create_file_selector()
+        self.__create_main_panel()
 
     def __create_main_panel(self):
-        self._create_file_selector()
         with dpg.window(label="Main", width=1920, height=1080, id="main_panel_id"):
+            # add a buttom to enable file dialog as image selector
             self.item_dict["image_selector"] = dpg.add_button(
-                label="Image Selector", callback=lambda: dpg.show_item("file_dialog_id")
+                label="Image Selector", callback=lambda: dpg.show_item(tags.item_tags.image_file_dialog)
             )
+            # add two text to displaye loaded image name
             dpg.add_text(
                 "bright image: {img_name}".format(
-                    img_name=""
+                    img_name="not loaded"
                     if self.img_pair.bright is None
                     else self.img_pair.bright.split("/")[-1],
                 ),
-                tag="main_panel_bright_img_id",
+                tag= tags.item_tags.text_bright_image_name,
             )
 
             dpg.add_text(
                 "blue image: {img_name}".format(
-                    img_name=""
+                    img_name="not loaded"
                     if self.img_pair.blue is None
                     else self.img_pair.blue.split("/")[-1],
                 ),
-                tag="main_panel_blue_img_id",
+                tag= tags.item_tags.text_blue_image_name,
             )
             
-            # dpg.add_input_int(
-            #     label="blue image offset x",
-            #     width=400,
-            #     min_value=-10000,
-            #     default_value=0,
-            #     callback=callbacks.update_offset_x,
-            #     user_data=self,
-            # )
-            # dpg.add_input_int(
-            #     label="blue image offset y",
-            #     width=400,
-            #     min_value=-10000,
-            #     default_value=0,
-            #     callback=callbacks.update_offset_y,
-            #     user_data=self,
-            # )
             self.item_dict["offset_slider"] = dpg.add_slider_intx(
                 label="blue image offset",
                 size=2,
@@ -246,7 +233,7 @@ class app:
                     label="Image Plot",
                     height=-1,
                     width=-1,
-                    id="image_plot",
+                    tag=tags.item_tags.image_plot,
                     equal_aspects=True,
                     crosshairs=True,
                 ):
@@ -260,12 +247,12 @@ class app:
     #         pass
             # dpg.add_button(label='set',callback = "button_window")
 
-            with dpg.window(id="button_window",width=400,height=60,show=False):
+            with dpg.window(tag="button_window",width=400,height=60,show=False):
                 self.item_dict["Add"] = dpg.add_button(label="Add",callback = callbacks.Add,user_data=self)
                 self.item_dict["Delete"] = dpg.add_button(label="Delete",callback = callbacks.Delete,user_data=self)
                 self.item_dict["Size"] = dpg.add_slider_int(label="Size",default_value=6,min_value= 4,max_value=10 ,callback=callbacks.Size,user_data=self)
                 self.item_dict["color"] = dpg.add_color_picker(label="Color",no_side_preview=True,display_hex=False,callback=callbacks.Color,user_data=self)
-            with dpg.window(id="Droplet",label="Droplet",width=350,height=350,show=False):
+            with dpg.window(tag="Droplet",label="Droplet",width=350,height=350,show=False):
                 self.Type_One = dpg.add_text("Type One : {d}".format(d=None))    
                 self.Type_Two = dpg.add_text("Type Two : {d}".format(d=None))
                 self.Type_Three = dpg.add_text("Type Three : {d}".format(d=None))
@@ -278,16 +265,17 @@ class app:
         print("load models")
         self.__set_font()
         print("set font")
-        self.__create_main_panel()
+        self.__create_ui()
         # self.__create_working_space()
-        dpg.set_primary_window("main_panel_id", True)
         # dpg.setup_viewport()
         # dpg.set_viewport_title(title="Oil Droplet Detection")
         # dpg.set_viewport_pos([500, 500])
         # dpg.set_viewport_width(1000)
         # dpg.set_viewport_height(1000)
-        dpg.show_font_manager()
+        # dpg.show_font_manager()
         dpg.setup_dearpygui()
+        dpg.set_primary_window("main_panel_id", True)
+
         dpg.show_viewport()
         dpg.start_dearpygui()
         dpg.destroy_context()
