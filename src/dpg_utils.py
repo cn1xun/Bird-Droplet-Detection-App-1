@@ -7,7 +7,7 @@ def add_images_texture(width, height ,data ,id):
     with dpg.texture_registry():
         dpg.add_dynamic_texture(width, height, data, id=id)
 
-def add_images_series(type,width,height):
+def add_images_series(type,width,height,parent=76):
     dpg.add_image_series(
         type+"texture",
         (0,height),
@@ -15,7 +15,7 @@ def add_images_series(type,width,height):
         uv_min=(0, 0),
         uv_max=(1, 1),
         show =True,
-        parent=70,
+        parent=parent,
         label=type)
 
 def add_heatmap_image(w, h, id):

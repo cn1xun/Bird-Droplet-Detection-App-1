@@ -150,18 +150,18 @@ def file_selector_callback(sender, app_data, app):
     img_detect_path = 'empty.png'
     img_detect = os.path.join(os.getcwd(), img_detect_path)
     w, h,channels, data = dpg.load_image(img_detect)
-    # print("load_image",w,h)
+    print("load_image",w,h)
     names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
     dpg_utils.add_images_texture(w,h,data,names[0]+"texture")
-    dpg_utils.add_images_series(names[0],w,h)
+    dpg_utils.add_images_series(names[0],w,h,app.yaxis)
     dpg_utils.add_images_texture(w,h,data,names[1]+"texture")
-    dpg_utils.add_images_series(names[1],w,h)
+    dpg_utils.add_images_series(names[1],w,h,app.yaxis)
     dpg_utils.add_images_texture(w,h,data,names[2]+"texture")
-    dpg_utils.add_images_series(names[2],w,h)
+    dpg_utils.add_images_series(names[2],w,h,app.yaxis)
     dpg_utils.add_images_texture(w,h,data,names[3]+"texture")
-    dpg_utils.add_images_series(names[3],w,h)
+    dpg_utils.add_images_series(names[3],w,h,app.yaxis)
     dpg_utils.add_images_texture(w,h,data,names[4]+"texture")
-    dpg_utils.add_images_series(names[4],w,h)
+    dpg_utils.add_images_series(names[4],w,h,app.yaxis)
 
 
 def check_image_loaded(app):
@@ -190,12 +190,26 @@ def detect(sender, app_data, app):
     )
     # type droplet_num
     app.logger.log("end detection: {d}".format(d=droplet_num))
-    news_locs = utils.droplet_loc(predicted_map)
+    # set text
+    if app.type == "Type One":
+        dpg.set_value(app.Type_One,"{t}: {d}".format(t=app.type,d=droplet_num))
+    elif app.type == "Type Two":
+        dpg.set_value(app.Type_Two,"{t}: {d}".format(t=app.type,d=droplet_num))
+    elif app.type == "Type Three":
+        dpg.set_value(app.Type_Three,"{t}: {d}".format(t=app.type,d=droplet_num))
+    elif app.type == "Type Four":
+        dpg.set_value(app.Type_Four,"{t}: {d}".format(t=app.type,d=droplet_num))
+    elif app.type == "Type Five":
+        dpg.set_value(app.Type_Five,"{t}: {d}".format(t=app.type,d=droplet_num))
+    w,h = predicted_map.shape
+    news_locs = utils.droplet_loc(predicted_map,w)
     app.droplet_dict_locs[app.type] = utils.clean_similar(news_locs)
     # print("news_locs",news_locs)
     utils.pic_rectangle(app.type,app.droplet_dict_locs[app.type],outline = app.droplet_dict_colors[app.type])
     dpg.show_item("button_window")
-
+    dpg.show_item("Droplet")
+    # set heatmapp
+    dpg.add_heat_series(predicted_heatmap, w, h, scale_min=0, scale_max=100,bounds_min=(0,0),bounds_max=(w,h), parent=app.yaxis,label='Heat map')
     
 def Add():
     with dpg.handler_registry():
