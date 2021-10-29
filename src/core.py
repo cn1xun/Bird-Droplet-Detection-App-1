@@ -1,12 +1,13 @@
+from matplotlib.pyplot import legend
 import numpy as np
 import dearpygui.dearpygui as dpg
-import dearpygui.logger as dpg_logger
 from numpy.lib.function_base import append
 import callbacks
 import torch
 import os
 import torch.nn as nn
 from PIL import ImageOps
+from tags import *
 
 
 class bio_image_vgg_classification_net(nn.Module):
@@ -97,8 +98,6 @@ class SlidingWindowDataset(torch.utils.data.Dataset):
 class app:
     def __init__(self) -> None:
         self.img_pair = callbacks.ImgPathPair(bright=None, blue=None)
-        self.logger = dpg_logger.mvLogger()
-        dpg.set_item_pos(self.logger.window_id, [1000, 0])
         self.models = []
         self.gallery = []
         self.texture_ids = ["Bright_Field", "Blue_Field", "Heatmap"]
@@ -107,14 +106,15 @@ class app:
         self.yaxis = None
         self.blue_offset = np.array([0, 0])
         self.legend = None
-        self.batch_size=64,
+        self.batch_size = (64,)
         self.winsize = 10
         self.padding = 7
         self.stride = 2
         self.target_type = 0
         self.target_device = torch.device("cpu")
         self.image_loaded = False
-        self.item_dict = {}
+        self.default_font = None
+        self.item_tag_dict = {}
 
     def __load_models(self):
         for i in range(5):
@@ -124,74 +124,66 @@ class app:
             )
             model.eval()
             self.models.append(model)
+        print("model loaded")
 
     def _create_file_selector(self):
         with dpg.file_dialog(
             directory_selector=False,
             show=False,
-            id="file_dialog_id",
+            id=item_tags.file_dialog_image_select,
             file_count=2,
-            callback=callbacks.file_selector_callback,
+            callback=callbacks.image_selector_callback,
             user_data=self,
         ):
             dpg.add_file_extension(".*", color=(255, 255, 255, 255))
             dpg.add_file_extension(".png", color=(0, 255, 0, 255))
+            dpg.add_file_extension(".riff", color=(0, 255, 255, 0))
 
     def __set_font(self):
         # add a font registry
         with dpg.font_registry():
             # add font (set as default for entire app)
-            dpg.add_font("Retron2000.ttf", 40, default_font=True)
+            self.default_font = dpg.add_font("Retron2000.ttf", 40)
+        dpg.bind_font(self.default_font)
+        print("font set")
+
+    def __create_ui_layout(self):
+        self._create_file_selector()
+        self.__create_main_panel()
 
     def __create_main_panel(self):
-        self._create_file_selector()
-        with dpg.window(label="Main", width=1500, height=300, id="main_panel_id"):
-            self.item_dict["image_selector"] = dpg.add_button(
-                label="Image Selector", callback=lambda: dpg.show_item("file_dialog_id")
+        with dpg.window(label="Main", tag=item_tags.main_window):
+            self.item_tag_dict["image_selector"] = dpg.add_button(
+                label="Image Selector",
+                callback=lambda: dpg.show_item(item_tags.file_dialog_image_select),
             )
-            dpg.add_same_line(spacing=100)
             dpg.add_text(
                 "bright image: {img_name}".format(
                     img_name=""
                     if self.img_pair.bright is None
                     else self.img_pair.bright.split("/")[-1],
                 ),
-                id="main_panel_bright_img_id",
+                tag="main_panel_bright_img_id",
             )
-            dpg.add_same_line(spacing=100)
             dpg.add_text(
                 "blue image: {img_name}".format(
                     img_name=""
                     if self.img_pair.blue is None
                     else self.img_pair.blue.split("/")[-1],
                 ),
-                id="main_panel_blue_img_id",
+                tag="main_panel_blue_img_id",
             )
 
-            # dpg.add_input_int(
-            #     label="blue image offset x",
-            #     width=400,
-            #     min_value=-10000,
-            #     default_value=0,
-            #     callback=callbacks.update_offset_x,
-            #     user_data=self,
-            # )
-            # dpg.add_input_int(
-            #     label="blue image offset y",
-            #     width=400,
-            #     min_value=-10000,
-            #     default_value=0,
-            #     callback=callbacks.update_offset_y,
-            #     user_data=self,
-            # )
-            self.item_dict["offset_slider"] = dpg.add_slider_intx(
+            self.item_tag_dict["offset_slider"] = dpg.add_slider_intx(
                 label="blue image offset",
                 size=2,
                 callback=callbacks.update_blue_offset,
                 user_data=self,
                 enabled=False,
+                min_value=-100,
+                max_value=100,
             )
-            self.item_dict["device_selector"] = dpg.add_radio_button(
+            self.item_tag_dict["device_selector"] = dpg.add_radio_button(
                 ("cpu", "gpu"),
                 default_value="cpu",
                 horizontal=True,
@@ -199,9 +191,8 @@ class app:
                 user_data=app,
                 enabled=False,
             )
-            dpg.add_same_line(spacing=100)
 
-            self.item_dict["num_threads"] = dpg.add_input_int(
+            self.item_tag_dict["num_threads"] = dpg.add_input_int(
                 label="num threads",
                 width=400,
                 min_value=1,
@@ -209,42 +200,44 @@ class app:
                 user_data=self,
                 enabled=False,
             )
-            self.item_dict["detect"] = dpg.add_button(
-                label="detect", callback=callbacks.detect, user_data=self, enabled=False
+            self.item_tag_dict["detect"] = dpg.add_button(
+                label="detect", callback=callbacks.detect_droplets, user_data=self, enabled=False
             )
-            self.item_dict["type_radio"] = dpg.add_radio_button(
+            self.item_tag_dict["type_radio"] = dpg.add_radio_button(
                 ("Type One", "Type Two", "Type Three", "Type Four", "Type Five"),
                 horizontal=True,
                 callback=callbacks.swtich_target_type,
                 user_data=self,
                 enabled=False,
             )
-            self.item_dict["texture_radio"] = dpg.add_radio_button(
+            self.item_tag_dict["texture_radio"] = dpg.add_radio_button(
                 ("Bright Field", "Blue Field", "Heatmap"),
                 horizontal=True,
                 user_data=self,
                 callback=callbacks.switch_texture,
                 enabled=False,
             )
-            self.item_dict["padding"] = dpg.add_input_int(
+            self.item_tag_dict["padding"] = dpg.add_input_int(
                 label="Padding", width=400, default_value=7, enabled=False
             )
-            self.item_dict["stride"] = dpg.add_input_int(
+            self.item_tag_dict["stride"] = dpg.add_input_int(
                 label="Stride", width=400, default_value=2, enabled=False
             )
-            self.item_dict["winsize"] = dpg.add_input_int(
+            self.item_tag_dict["winsize"] = dpg.add_input_int(
                 label="Window Size", width=400, default_value=10, enabled=False
             )
 
-            with dpg.tree_node(label="Image Series", show=True, default_open=True):
+            with dpg.tree_node(label="Working Space", show=True, default_open=True):
                 with dpg.plot(
                     label="Image Plot",
                     height=-1,
                     width=-1,
-                    id="image_plot",
+                    tag=item_tags.image_plot_workspace,
                     equal_aspects=True,
                     crosshairs=True,
+                    # legend=True,
                 ):
+                    # dpg.add_plot_legend()
                     pass
                     # xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x")
                     # yaxis_id = dpg.add_plot_axis(dpg.mvYAxis, label="y axis")
@@ -252,19 +245,27 @@ class app:
     # def __create_working_space(self):
     #     with dpg.window(label="working space", pos=(500, 500),id = "working_space_id"):
     #         pass
+    def handler_registry(self):
+        with dpg.handler_registry(tag = item_tags.workspace_handler) as handler:
+            dpg.add_mouse_click_handler(button=0,callback=callbacks.add_droplet_manually)
+        dpg.bind_item_handler_registry(item_tags.image_plot_workspace,item_tags.workspace_handler)
 
     def launch(self):
+        dpg.create_context()
+        dpg.create_viewport(title="Oil Droplet Detection", width=1920, height=1080)
+        dpg.show_debug()
         self.__load_models()
+        print("a")
         self.__set_font()
-        self.__create_main_panel()
+        print("b")
+        self.__create_ui_layout()
+        self.handler_registry()
         # self.__create_working_space()
-        dpg.set_primary_window("main_panel_id", True)
-        dpg.setup_viewport()
-        dpg.set_viewport_title(title="Oil Droplet Detection")
-        dpg.set_viewport_pos([1000, 1000])
-        dpg.set_viewport_width(2000)
-        dpg.set_viewport_height(2000)
+        dpg.setup_dearpygui()
+        dpg.show_viewport()
+        dpg.set_primary_window(item_tags.main_window, True)
         dpg.start_dearpygui()
+        dpg.destroy_context()
 
 
 if __name__ == "__main__":

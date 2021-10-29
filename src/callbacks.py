@@ -6,7 +6,7 @@ import torch
 import dpg_utils
 import numpy as np
 import utils
-
+from tags import * 
 ImgPathPair = namedtuple("ImgPair", ["bright", "blue"])
 
 
@@ -28,7 +28,7 @@ class cell_info:
         return [self.loc[0] + self.size[0], self.loc[1] + self.size[1]]
 
 
-def file_selector_callback(sender, app_data, app):
+def image_selector_callback(sender, app_data, app):
     img_keys = []
     img_types = []
     img_path = []
@@ -38,12 +38,12 @@ def file_selector_callback(sender, app_data, app):
         img_types.append(name_features[-1].lower())
         img_keys.append("_".join(name_features[:-1]))
     if img_keys.count(img_keys[0]) != len(img_keys):
-        app.logger.log_warning(
+        print(
             "two images does not have the same key: {keys}".format(img_keys)
         )
         return
     if not ("bf" in img_types and "e" in img_types):
-        app.logger.log_warning(
+        print(
             "the type of the two images should be 'bf' or 'e': {types}".format(
                 types=img_types
             )
@@ -54,7 +54,7 @@ def file_selector_callback(sender, app_data, app):
     elif img_types[0] == "e":
         img_pair = ImgPathPair(bright=img_path[1], blue=img_path[0])
 
-    app.logger.log(
+    print(
         "record target image paths: \n\t1)[bright] {br_img_name}\n\t2)[blue] {bl_img_name}".format(
             br_img_name=img_pair.bright, bl_img_name=img_pair.blue
         )
@@ -79,9 +79,9 @@ def file_selector_callback(sender, app_data, app):
     dpg_utils.clear_drawlist(app.texture_ids)
     # add images to working space
     if app.xaxis is None:
-        app.xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x axis", parent="image_plot")
+        app.xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x axis", parent=item_tags.image_plot_workspace)
     if app.yaxis is None:
-        app.yaxis = dpg.add_plot_axis(dpg.mvYAxis, label="y axis", parent="image_plot")
+        app.yaxis = dpg.add_plot_axis(dpg.mvYAxis, label="y axis", parent=item_tags.image_plot_workspace)
     br_w, br_h = dpg_utils.add_image(img_pair.bright, app.texture_ids[0])
     br_size = np.array([br_w, br_h])
     br_loc = np.array([0, 0])
@@ -133,15 +133,15 @@ def file_selector_callback(sender, app_data, app):
 
 def check_image_loaded(app):
     if not app.image_loaded:
-        app.logger.log_error("images are not loaded")
+        print("images are not loaded")
         return False
     return True
 
 
-def detect(sender, app_data, app):
+def detect_droplets(sender, app_data, app):
     if not check_image_loaded(app):
         return
-    app.logger.log("start detection: tpye{d}".format(d=app.target_device))
+    print("start detection: tpye{d}".format(d=app.target_device))
 
     droplet_num, predicted_map, predicted_heatmap = utils.binary_droplet_detection(
         app.img_pair.blue,
@@ -156,7 +156,7 @@ def detect(sender, app_data, app):
         device=app.target_device,
         verbose=True,
     )
-    app.logger.log("end detection: {d}".format(d=app.droplet_num))
+    print("end detection: {d}".format(d=app.droplet_num))
 
 
 def update_blue_offset(sender, app_data, app):
@@ -164,10 +164,11 @@ def update_blue_offset(sender, app_data, app):
         return
     app.blue_offset[0] = app_data[0]
     app.blue_offset[1] = app_data[1]
+    # print(app.blue_offset)
     dpg.configure_item(
         app.gallery[1].ref,
-        bounds_min=app.gallery[1].loc + app.blue_offset[0],
-        bounds_max=app.gallery[1].bottom_right() + app.blue_offset[1],
+        bounds_min=app.gallery[1].loc + app.blue_offset,
+        bounds_max=app.gallery[1].bottom_right() + app.blue_offset,
     )
 
 
@@ -204,19 +205,25 @@ def swtich_target_type(sender, app_data, app):
     names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
     target_type = names.index(app_data)
     app.target_type = target_type
-    app.logger.log("ctarget type: {d}".format(d=names[app.target_type]))
+    print("ctarget type: {d}".format(d=names[app.target_type]))
 
 
 def set_device(sender, app_data, app):
     if app_data == "cpu":
         app.target_device = torch.device("cpu")
     elif app_data == "gpu":
-        app.logger.log("cuda available: {d}".format(d=torch.cuda.is_available()))
+        print("cuda available: {d}".format(d=torch.cuda.is_available()))
         if torch.cuda.is_available():
             app.target_device = torch.device("cuda")
-    app.logger.log("current device: {d}".format(d=app.target_device))
+    print("current device: {d}".format(d=app.target_device))
 
 
 def enable_all_items(app):
-    for key, val in app.item_dict.items():
+    for key, val in app.item_tag_dict.items():
         dpg.enable_item(val)
+
+def add_droplet_manually(sender,app_data,app):
+    if dpg.is_item_hovered(item_tags.image_plot_workspace):
+        print(dpg.get_plot_mouse_pos())
+        print(sender)
+        print(app_data)
