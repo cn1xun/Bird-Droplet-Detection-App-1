@@ -7,9 +7,7 @@ import dearpygui.logger as dpg_logger
 
 def add_and_load_image(image_path="", parent=None):
     image_path = tmp_file_path
-    print(image_path)
     width, height, channels, data = dpg.load_image(image_path)
-
     with dpg.texture_registry() as reg_id:
         texture_id = dpg.add_static_texture(width, height, data, parent=reg_id)
     with dpg.window(label="Tutorial"):

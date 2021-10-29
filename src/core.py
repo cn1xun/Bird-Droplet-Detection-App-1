@@ -100,7 +100,7 @@ class app:
         self.img_pair = callbacks.ImgPathPair(bright=None, blue=None)
         self.models = []
         self.gallery = []
-        self.detection_data = [[],[],[],[],[]]
+        self.detection_data = [[], [], [], [], []]
         self.texture_ids = ["Bright_Field", "Blue_Field", "Heatmap"]
         self.image_spacing = 20
         self.xaxis = None
@@ -138,7 +138,7 @@ class app:
         ):
             dpg.add_file_extension(".*", color=(255, 255, 255, 255))
             dpg.add_file_extension(".png", color=(0, 255, 0, 255))
-            dpg.add_file_extension(".riff", color=(0, 255, 255, 0))
+            dpg.add_file_extension(".tiff", color=(0, 255, 255, 255))
 
     def __set_font(self):
         # add a font registry
@@ -202,7 +202,10 @@ class app:
                 enabled=False,
             )
             self.item_tag_dict["detect"] = dpg.add_button(
-                label="detect", callback=callbacks.detect_droplets, user_data=self, enabled=False
+                label="detect",
+                callback=callbacks.detect_droplets,
+                user_data=self,
+                enabled=False,
             )
             self.item_tag_dict["type_radio"] = dpg.add_radio_button(
                 ("Type One", "Type Two", "Type Three", "Type Four", "Type Five"),
@@ -240,22 +243,33 @@ class app:
                 ):
                     # dpg.add_plot_legend()
                     pass
-                    app.xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x axis", parent=item_tags.image_plot_workspace)
-                    app.yaxis = dpg.add_plot_axis(dpg.mvYAxis, label="y axis",invert=True, parent=item_tags.image_plot_workspace)
-
+                    app.xaxis = dpg.add_plot_axis(
+                        dpg.mvXAxis,
+                        label="x axis",
+                        parent=item_tags.image_plot_workspace,
+                    )
+                    app.yaxis = dpg.add_plot_axis(
+                        dpg.mvYAxis,
+                        label="y axis",
+                        invert=True,
+                        parent=item_tags.image_plot_workspace,
+                    )
 
     # def __create_working_space(self):
     #     with dpg.window(label="working space", pos=(500, 500),id = "working_space_id"):
     #         pass
     def handler_registry(self):
-        with dpg.handler_registry(tag = item_tags.workspace_handler) as handler:
-            dpg.add_mouse_click_handler(button=0,callback=callbacks.add_droplet_manually,user_data=self)
-        dpg.bind_item_handler_registry(item_tags.image_plot_workspace,item_tags.workspace_handler)
+        with dpg.handler_registry(tag=item_tags.workspace_handler) as handler:
+            dpg.add_mouse_click_handler(
+                button=0, callback=callbacks.add_droplet_manually, user_data=self
+            )
+        dpg.bind_item_handler_registry(
+            item_tags.image_plot_workspace, item_tags.workspace_handler
+        )
 
     def launch(self):
         dpg.create_context()
         dpg.create_viewport(title="Oil Droplet Detection", width=1920, height=1080)
-        dpg.show_debug()
         self.__load_models()
         print("a")
         self.__set_font()
@@ -263,11 +277,31 @@ class app:
         self.__create_ui_layout()
         self.handler_registry()
         # self.__create_working_space()
+        self.debug_load_images()
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window(item_tags.main_window, True)
         dpg.start_dearpygui()
         dpg.destroy_context()
+
+    def debug_load_images(self):
+        app_data = {
+            "file_path_name": "/home/zhiquan/projects/Bird-Droplet-Detection-App/src/data/2 files Selected.*",
+            "file_name": "2 files Selected.*",
+            "current_path": "/home/zhiquan/projects/Bird-Droplet-Detection-App/src/data",
+            "current_filter": ".*",
+            "selections": {
+                "HAGO101_LE_PB_10-30-2019_Site_225_BF.tiff": "/home/zhiquan/projects/Bird-Droplet-Detection-App/src/data/HAGO101_LE_PB_10-30-2019_Site_225_BF.tiff",
+                "HAGO101_LE_PB_10-30-2019_Site_225_E.tiff": "/home/zhiquan/projects/Bird-Droplet-Detection-App/src/data/HAGO101_LE_PB_10-30-2019_Site_225_E.tiff",
+            },
+        }
+        texture_buffer = np.ones((3, 3, 4)).flatten().tolist()
+        print(texture_buffer)
+        # texture_buffer[:, :, -1] = 1
+        with dpg.texture_registry():
+            dpg.add_dynamic_texture(3, 3, texture_buffer, tag="abc")
+        print("AA")
+        callbacks.image_selector_callback(None,app_data,self)
 
 
 if __name__ == "__main__":

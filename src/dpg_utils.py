@@ -3,20 +3,72 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def add_image(imgae_path, id):
+class cell_info:
+    def __init__(self, texture_tag, image_series_tag, size, top_left):
+        self.texture_tag = texture_tag
+        self.image_series_tag = image_series_tag
+        self.size = size
+        self.top_left = top_left
+
+    def update_info(self, texture_tag, image_series_tag, size, top_left):
+        self.texture_tag = texture_tag
+        self.image_series_tag = image_series_tag
+        self.size = size
+        self.top_left = top_left
+
+    @property
+    def bottom_right(self):
+        return self.top_left + self.size
+
+
+def register_texture(imgae_path, tag):
     im = plt.imread(imgae_path) / 255.0
     height, width, channels = im.shape
     im = np.append(im, np.ones((height, width, 1)), 2)
     with dpg.texture_registry():
-        dpg.add_dynamic_texture(width, height, im, id=id)
+        dpg.add_dynamic_texture(width, height, im, tag=tag)
     return width, height
 
 
-def add_heatmap_image(w, h, id):
-    texture_buffer = np.ones((w, h, 4))
-    texture_buffer[:, :, -1] = 1
+def add_texture_to_workspace(image_path, texture_tag, parent_axis, show=False):
+    img_w, img_h = register_texture(image_path, texture_tag)
+    img_size = np.array([img_w, img_h],dtype=np.int)
+    img_top_left = np.array([0, 0],dtype=np.int)
+    img_bottom_right = img_top_left + img_size
+    img_series_tag = dpg.add_image_series(
+        texture_tag,
+        img_top_left,
+        img_bottom_right,
+        show=show,
+        label=texture_tag,
+        parent=parent_axis,
+    )
+    img_cell = cell_info(texture_tag, img_series_tag, img_size, img_top_left)
+    return img_cell
+
+
+def add_image_buff_to_workspace(img_size, img_buff_tag, parent_axis, show=False):
+    register_image_buffer(img_size[0], img_size[1], img_buff_tag)
+    img_top_left = np.array([0, 0],dtype=np.int)
+    img_bottom_right = img_top_left + img_size
+    img_series_tag = dpg.add_image_series(
+        img_buff_tag,
+        img_top_left,
+        img_bottom_right,
+        show=show,
+        label=img_buff_tag,
+        parent=parent_axis,
+    )
+    img_cell = cell_info(img_buff_tag, img_series_tag, img_size, img_top_left)
+    return img_cell
+
+
+def register_image_buffer(w, h, tag):
+    w = int(w)
+    h = int(h)
+    texture_buffer = np.ones((w, h, 4)).flatten().tolist()
     with dpg.texture_registry():
-        dpg.add_dynamic_texture(w, h, texture_buffer.flatten(), id=id)
+        dpg.add_dynamic_texture(w, h, texture_buffer, tag=tag)
 
 
 def clear_drawlist(img_ids):
@@ -25,6 +77,7 @@ def clear_drawlist(img_ids):
             dpg.delete_item(img_id)
         if dpg.does_item_exist(img_id + "_tex"):
             dpg.delete_item(img_id + "_tex")
+
 
 def parse_image_selector_data(app_data):
     img_keys = []
@@ -36,9 +89,7 @@ def parse_image_selector_data(app_data):
         img_types.append(name_features[-1].lower())
         img_keys.append("_".join(name_features[:-1]))
     if img_keys.count(img_keys[0]) != len(img_keys):
-        print(
-            "two images does not have the same key: {keys}".format(img_keys)
-        )
+        print("two images does not have the same key: {keys}".format(img_keys))
         return
     if not ("bf" in img_types and "e" in img_types):
         print(
