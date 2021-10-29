@@ -100,6 +100,7 @@ class app:
         self.img_pair = callbacks.ImgPathPair(bright=None, blue=None)
         self.models = []
         self.gallery = []
+        self.detection_data = [[],[],[],[],[]]
         self.texture_ids = ["Bright_Field", "Blue_Field", "Heatmap"]
         self.image_spacing = 20
         self.xaxis = None
@@ -239,15 +240,16 @@ class app:
                 ):
                     # dpg.add_plot_legend()
                     pass
-                    # xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x")
-                    # yaxis_id = dpg.add_plot_axis(dpg.mvYAxis, label="y axis")
+                    app.xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x axis", parent=item_tags.image_plot_workspace)
+                    app.yaxis = dpg.add_plot_axis(dpg.mvYAxis, label="y axis",invert=True, parent=item_tags.image_plot_workspace)
+
 
     # def __create_working_space(self):
     #     with dpg.window(label="working space", pos=(500, 500),id = "working_space_id"):
     #         pass
     def handler_registry(self):
         with dpg.handler_registry(tag = item_tags.workspace_handler) as handler:
-            dpg.add_mouse_click_handler(button=0,callback=callbacks.add_droplet_manually)
+            dpg.add_mouse_click_handler(button=0,callback=callbacks.add_droplet_manually,user_data=self)
         dpg.bind_item_handler_registry(item_tags.image_plot_workspace,item_tags.workspace_handler)
 
     def launch(self):

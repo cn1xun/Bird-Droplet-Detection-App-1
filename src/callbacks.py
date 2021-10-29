@@ -2,11 +2,13 @@ import dearpygui.dearpygui as dpg
 from collections import namedtuple
 
 from matplotlib.pyplot import semilogx, show
+from numpy import core
 import torch
 import dpg_utils
 import numpy as np
 import utils
 from tags import * 
+from core import app 
 ImgPathPair = namedtuple("ImgPair", ["bright", "blue"])
 
 
@@ -28,7 +30,9 @@ class cell_info:
         return [self.loc[0] + self.size[0], self.loc[1] + self.size[1]]
 
 
-def image_selector_callback(sender, app_data, app):
+def image_selector_callback(sender, app_data, app:app):
+    # clear previous images
+    dpg_utils.clear_drawlist(app.texture_ids)
     img_keys = []
     img_types = []
     img_path = []
@@ -75,17 +79,9 @@ def image_selector_callback(sender, app_data, app):
             img_name=img_pair.blue.split("/")[-1],
         ),
     )
-    # clear previous images
-    dpg_utils.clear_drawlist(app.texture_ids)
-    # add images to working space
-    if app.xaxis is None:
-        app.xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x axis", parent=item_tags.image_plot_workspace)
-    if app.yaxis is None:
-        app.yaxis = dpg.add_plot_axis(dpg.mvYAxis, label="y axis", parent=item_tags.image_plot_workspace)
     br_w, br_h = dpg_utils.add_image(img_pair.bright, app.texture_ids[0])
     br_size = np.array([br_w, br_h])
-    br_loc = np.array([0, 0])
-    br_cell = cell_info(app.texture_ids[0], br_size, br_loc)
+    br_cell = cell_info(app.texture_ids[0], br_size, np.array([0, 0]))
     br_tex_ref = dpg.add_image_series(
         app.texture_ids[0],
         br_cell.loc,
@@ -94,10 +90,10 @@ def image_selector_callback(sender, app_data, app):
         parent=app.yaxis,
     )
     br_cell.ref = br_tex_ref
+    
     bl_w, bl_h = dpg_utils.add_image(img_pair.blue, app.texture_ids[1])
     bl_size = np.array([bl_w, bl_h])
-    bl_loc = np.array([0, 0])
-    bl_cell = cell_info(app.texture_ids[1], bl_size, bl_loc)
+    bl_cell = cell_info(app.texture_ids[1], bl_size, np.array([0, 0]))
     bl_tex_ref = dpg.add_image_series(
         app.texture_ids[1],
         bl_cell.loc,
@@ -108,7 +104,7 @@ def image_selector_callback(sender, app_data, app):
     )
     bl_cell.ref = bl_tex_ref
     dpg_utils.add_heatmap_image(br_w, br_h, app.texture_ids[2])
-    hm_cell = cell_info(app.texture_ids[2], br_size, br_loc)
+    hm_cell = cell_info(app.texture_ids[2], br_size, np.array([0, 0]))
     hm_tex_ref = dpg.add_image_series(
         app.texture_ids[2],
         br_cell.loc,
@@ -222,8 +218,8 @@ def enable_all_items(app):
     for key, val in app.item_tag_dict.items():
         dpg.enable_item(val)
 
-def add_droplet_manually(sender,app_data,app):
+def add_droplet_manually(sender,app_data,app:app):
     if dpg.is_item_hovered(item_tags.image_plot_workspace):
-        print(dpg.get_plot_mouse_pos())
-        print(sender)
-        print(app_data)
+        mouse_pos = np.array(dpg.get_plot_mouse_pos(),dtype=np.integer)
+        app.detection_data[app.target_type].append(mouse_pos)
+        print(app.detection_data)
