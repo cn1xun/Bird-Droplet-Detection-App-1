@@ -254,11 +254,7 @@ class app:
                 invert=True,
                 parent=item_tags.image_plot_workspace,
             )
-            # dpg.configure_item("working_space_tree_node",open = True)
 
-    # def __create_working_space(self):
-    #     with dpg.window(label="working space", pos=(500, 500),id = "working_space_id"):
-    #         pass
     def handler_registry(self):
         with dpg.handler_registry(tag=item_tags.workspace_handler) as handler:
             dpg.add_mouse_click_handler(
@@ -272,12 +268,9 @@ class app:
         dpg.create_context()
         dpg.create_viewport(title="Oil Droplet Detection", width=3840, height=2160)
         self.__load_models()
-        print("a")
         self.__set_font()
-        print("b")
         self.__create_ui_layout()
         self.handler_registry()
-        # self.__create_working_space()
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window(item_tags.main_window, True)
@@ -296,12 +289,6 @@ class app:
                 "HAGO101_LE_PB_10-30-2019_Site_225_E.tiff": "/home/zhiquan/projects/Bird-Droplet-Detection-App/src/data/HAGO101_LE_PB_10-30-2019_Site_225_E.tiff",
             },
         }
-        texture_buffer = np.ones((3, 3, 4)).flatten().tolist()
-        print(texture_buffer)
-        # texture_buffer[:, :, -1] = 1
-        with dpg.texture_registry():
-            dpg.add_dynamic_texture(3, 3, texture_buffer, tag="abc")
-        print("AA")
         callbacks.image_selector_callback(None, app_data, self)
 
 
