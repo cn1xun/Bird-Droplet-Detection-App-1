@@ -100,10 +100,10 @@ class app:
     def __init__(self) -> None:
         self.img_pair = callbacks.ImgPathPair(bright=None, blue=None)
         self.models = []
-        self.texture_gallery = []
         self.detection_data = [[], [], [], [], []]
-        self.detection_images = [None] * 5
-        self.texture_tags = ["Bright_Field", "Blue_Field", "Heatmap"]
+        self.texture_gallery = []
+        self.detection_gallery = []
+       
         self.image_spacing = 20
         self.xaxis = None
         self.yaxis = None
@@ -220,7 +220,7 @@ class app:
                 ("Bright_Field", "Blue_Field", "Heatmap"),
                 horizontal=True,
                 user_data=self,
-                callback=callbacks.switch_texture,
+                callback=callbacks.switch_raw_texture,
                 enabled=False,
             )
             self.item_tag_dict["padding"] = dpg.add_input_int(
@@ -240,8 +240,10 @@ class app:
                 tag=item_tags.image_plot_workspace,
                 equal_aspects=True,
                 crosshairs=True,
-                # legend=True,
+                box_select_button = True
             )
+            dpg.add_plot_legend(parent =item_tags.image_plot_workspace)
+
             app.xaxis = dpg.add_plot_axis(
                 dpg.mvXAxis,
                 label="x axis",

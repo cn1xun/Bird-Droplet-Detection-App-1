@@ -2,6 +2,7 @@ import dearpygui.dearpygui as dpg
 import numpy as np
 import matplotlib.pyplot as plt
 
+from collections import namedtuple
 
 class cell_info:
     def __init__(self, texture_tag, image_series_tag, size, top_left):
@@ -48,7 +49,7 @@ def add_texture_to_workspace(image_path, texture_tag, parent_axis, show=False):
 
 
 def add_image_buff_to_workspace(img_size, img_buff_tag, parent_axis, show=False,transparent= False):
-    register_image_buffer(img_size[0], img_size[1], img_buff_tag,transparent = False)
+    register_image_buffer(img_size[0], img_size[1], img_buff_tag, transparent)
     img_top_left = np.array([0, 0],dtype=np.int)
     img_bottom_right = img_top_left + img_size
     img_series_tag = dpg.add_image_series(
@@ -59,6 +60,7 @@ def add_image_buff_to_workspace(img_size, img_buff_tag, parent_axis, show=False,
         label=img_buff_tag,
         parent=parent_axis,
     )
+
     img_cell = cell_info(img_buff_tag, img_series_tag, img_size, img_top_left)
     return img_cell
 
@@ -68,10 +70,14 @@ def register_image_buffer(w, h, tag,transparent):
     h = int(h)
     texture_buffer = np.ones((w, h, 4))
     if transparent:
-        texture_buffer[:,:,-1] = 0.4
+        texture_buffer[:,:,-1] = 0.0
 
     with dpg.texture_registry():
         dpg.add_dynamic_texture(w, h, texture_buffer.flatten(), tag=tag)
+
+def update_detection_result(app):
+    
+    pass
 
 
 def clear_drawlist(img_ids):
@@ -81,6 +87,7 @@ def clear_drawlist(img_ids):
         if dpg.does_item_exist(img_id + "_tex"):
             dpg.delete_item(img_id + "_tex")
 
+ImgPathPair = namedtuple("ImgPair", ["bright", "blue"])
 
 def parse_image_selector_data(app_data):
     img_keys = []

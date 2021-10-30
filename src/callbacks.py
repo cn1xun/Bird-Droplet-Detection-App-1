@@ -15,7 +15,8 @@ ImgPathPair = namedtuple("ImgPair", ["bright", "blue"])
 
 def image_selector_callback(sender, app_data, app: app):
     # clear previous images
-    dpg_utils.clear_drawlist(app.texture_tags)
+    dpg_utils.clear_drawlist(item_tags.texture_tags)
+    dpg_utils.clear_drawlist(item_tags.detection_tags)
     img_keys = []
     img_types = []
     img_path = []
@@ -62,17 +63,24 @@ def image_selector_callback(sender, app_data, app: app):
     )
     # bright image cell
     br_img_cell = dpg_utils.add_texture_to_workspace(
-        img_path_pair.bright, app.texture_tags[0], app.yaxis, True
+        img_path_pair.bright, item_tags.texture_tags[0], app.yaxis, True
     )
     # blue image cell
     bl_img_cell = dpg_utils.add_texture_to_workspace(
-        img_path_pair.blue, app.texture_tags[1], app.yaxis, False
+        img_path_pair.blue, item_tags.texture_tags[1], app.yaxis, False
     )
     # heatmap image cell
     hm_img_cell = dpg_utils.add_image_buff_to_workspace(
-        br_img_cell.size, app.texture_tags[2], app.yaxis, False,True
+        br_img_cell.size, item_tags.texture_tags[2], app.yaxis, False, True
     )
-
+   
+    # 5 detection types
+    for i in range(5):
+        app.detection_gallery.append(
+            dpg_utils.add_image_buff_to_workspace(
+                br_img_cell.size, item_tags.detection_tags[i], app.yaxis, True, True
+            )
+        )
     dpg.fit_axis_data(app.xaxis)
     dpg.fit_axis_data(app.yaxis)
     # add cell info to app
@@ -82,7 +90,6 @@ def image_selector_callback(sender, app_data, app: app):
     # inform app that the image is loaed
     app.image_loaded = True
     enable_all_items(app)
-    # print(dpg.get_item_configuration(app.legend))
 
 
 def check_image_loaded(app):
@@ -121,22 +128,24 @@ def update_blue_offset(sender, app_data, app):
     # print(app.blue_offset)
     dpg.configure_item(
         app.texture_gallery[1].image_series_tag,
-        bounds_min=app.texture_gallery[1].loc + app.blue_offset,
-        bounds_max=app.texture_gallery[1].bottom_right() + app.blue_offset,
+        bounds_min=app.texture_gallery[1].top_left + app.blue_offset,
+        bounds_max=app.texture_gallery[1].bottom_right + app.blue_offset,
     )
 
 
-def switch_texture(sender, app_data, app):
+def switch_raw_texture(sender, app_data, app):
     if not check_image_loaded(app):
         return
     texture_tag = app_data
-    texture_idx = app.texture_tags.index(texture_tag)
+    texture_idx = item_tags.texture_tags.index(texture_tag)
     # disable all textures:
     for i in range(len(app.texture_gallery)):
-        dpg.configure_item(app.texture_gallery[i].image_series_tag,show=False)
+        dpg.configure_item(app.texture_gallery[i].image_series_tag, show=False)
     # enable target texture
-    dpg.configure_item(app.texture_gallery[texture_idx].image_series_tag,show = True)
-   
+    dpg.configure_item(app.texture_gallery[texture_idx].image_series_tag, show=True)
+
+
+
 def update_padding(sender, app_data, app):
     app.padding = app_data
 
@@ -153,6 +162,7 @@ def swtich_target_type(sender, app_data, app):
     names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
     target_type = names.index(app_data)
     app.target_type = target_type
+
     print("ctarget type: {d}".format(d=names[app.target_type]))
 
 
@@ -175,4 +185,6 @@ def add_droplet_manually(sender, app_data, app: app):
     if dpg.is_item_hovered(item_tags.image_plot_workspace):
         mouse_pos = np.array(dpg.get_plot_mouse_pos(), dtype=np.integer)
         app.detection_data[app.target_type].append(mouse_pos)
+        dpg_utils.update_detection_result(app)
         print(app.detection_data)
+
