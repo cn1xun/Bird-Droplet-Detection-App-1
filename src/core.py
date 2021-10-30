@@ -1,7 +1,8 @@
-from matplotlib.pyplot import legend
+from matplotlib.pyplot import legend, show
 import numpy as np
 import dearpygui.dearpygui as dpg
 from numpy.lib.function_base import append
+from torch.nn.modules.module import T
 import callbacks
 import torch
 import os
@@ -232,29 +233,28 @@ class app:
                 label="Window Size", width=400, default_value=10, enabled=False
             )
 
-            with dpg.tree_node(label="Working Space", show=True, default_open=True):
-                with dpg.plot(
-                    label="Image Plot",
-                    height=-1,
-                    width=-1,
-                    tag=item_tags.image_plot_workspace,
-                    equal_aspects=True,
-                    crosshairs=True,
-                    # legend=True,
-                ):
-                    # dpg.add_plot_legend()
-                    pass
-                    app.xaxis = dpg.add_plot_axis(
-                        dpg.mvXAxis,
-                        label="x axis",
-                        parent=item_tags.image_plot_workspace,
-                    )
-                    app.yaxis = dpg.add_plot_axis(
-                        dpg.mvYAxis,
-                        label="y axis",
-                        invert=True,
-                        parent=item_tags.image_plot_workspace,
-                    )
+            dpg.add_plot(
+                label="Image Plot",
+                height=-1,
+                width=-1,
+                tag=item_tags.image_plot_workspace,
+                equal_aspects=True,
+                crosshairs=True,
+                # legend=True,
+            )
+            app.xaxis = dpg.add_plot_axis(
+                dpg.mvXAxis,
+                label="x axis",
+                invert=False,
+                parent=item_tags.image_plot_workspace,
+            )
+            app.yaxis = dpg.add_plot_axis(
+                dpg.mvYAxis,
+                label="y axis",
+                invert=True,
+                parent=item_tags.image_plot_workspace,
+            )
+            # dpg.configure_item("working_space_tree_node",open = True)
 
     # def __create_working_space(self):
     #     with dpg.window(label="working space", pos=(500, 500),id = "working_space_id"):
@@ -270,7 +270,7 @@ class app:
 
     def launch(self):
         dpg.create_context()
-        dpg.create_viewport(title="Oil Droplet Detection", width=1920, height=1080)
+        dpg.create_viewport(title="Oil Droplet Detection", width=3840, height=2160)
         self.__load_models()
         print("a")
         self.__set_font()

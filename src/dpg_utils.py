@@ -47,8 +47,8 @@ def add_texture_to_workspace(image_path, texture_tag, parent_axis, show=False):
     return img_cell
 
 
-def add_image_buff_to_workspace(img_size, img_buff_tag, parent_axis, show=False):
-    register_image_buffer(img_size[0], img_size[1], img_buff_tag)
+def add_image_buff_to_workspace(img_size, img_buff_tag, parent_axis, show=False,transparent= False):
+    register_image_buffer(img_size[0], img_size[1], img_buff_tag,transparent = False)
     img_top_left = np.array([0, 0],dtype=np.int)
     img_bottom_right = img_top_left + img_size
     img_series_tag = dpg.add_image_series(
@@ -63,12 +63,15 @@ def add_image_buff_to_workspace(img_size, img_buff_tag, parent_axis, show=False)
     return img_cell
 
 
-def register_image_buffer(w, h, tag):
+def register_image_buffer(w, h, tag,transparent):
     w = int(w)
     h = int(h)
-    texture_buffer = np.ones((w, h, 4)).flatten().tolist()
+    texture_buffer = np.ones((w, h, 4))
+    if transparent:
+        texture_buffer[:,:,-1] = 0.4
+
     with dpg.texture_registry():
-        dpg.add_dynamic_texture(w, h, texture_buffer, tag=tag)
+        dpg.add_dynamic_texture(w, h, texture_buffer.flatten(), tag=tag)
 
 
 def clear_drawlist(img_ids):

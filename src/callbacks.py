@@ -70,7 +70,7 @@ def image_selector_callback(sender, app_data, app: app):
     )
     # heatmap image cell
     hm_img_cell = dpg_utils.add_image_buff_to_workspace(
-        br_img_cell.size, app.texture_tags[2], app.yaxis, False
+        br_img_cell.size, app.texture_tags[2], app.yaxis, False,True
     )
 
     dpg.fit_axis_data(app.xaxis)
