@@ -99,9 +99,10 @@ class app:
     def __init__(self) -> None:
         self.img_pair = callbacks.ImgPathPair(bright=None, blue=None)
         self.models = []
-        self.gallery = []
+        self.texture_gallery = []
         self.detection_data = [[], [], [], [], []]
-        self.texture_ids = ["Bright_Field", "Blue_Field", "Heatmap"]
+        self.detection_images = [None] * 5
+        self.texture_tags = ["Bright_Field", "Blue_Field", "Heatmap"]
         self.image_spacing = 20
         self.xaxis = None
         self.yaxis = None
@@ -215,7 +216,7 @@ class app:
                 enabled=False,
             )
             self.item_tag_dict["texture_radio"] = dpg.add_radio_button(
-                ("Bright Field", "Blue Field", "Heatmap"),
+                ("Bright_Field", "Blue_Field", "Heatmap"),
                 horizontal=True,
                 user_data=self,
                 callback=callbacks.switch_texture,
@@ -277,10 +278,10 @@ class app:
         self.__create_ui_layout()
         self.handler_registry()
         # self.__create_working_space()
-        self.debug_load_images()
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window(item_tags.main_window, True)
+        self.debug_load_images()
         dpg.start_dearpygui()
         dpg.destroy_context()
 
@@ -301,7 +302,7 @@ class app:
         with dpg.texture_registry():
             dpg.add_dynamic_texture(3, 3, texture_buffer, tag="abc")
         print("AA")
-        callbacks.image_selector_callback(None,app_data,self)
+        callbacks.image_selector_callback(None, app_data, self)
 
 
 if __name__ == "__main__":

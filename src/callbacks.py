@@ -15,7 +15,7 @@ ImgPathPair = namedtuple("ImgPair", ["bright", "blue"])
 
 def image_selector_callback(sender, app_data, app: app):
     # clear previous images
-    dpg_utils.clear_drawlist(app.texture_ids)
+    dpg_utils.clear_drawlist(app.texture_tags)
     img_keys = []
     img_types = []
     img_path = []
@@ -62,23 +62,23 @@ def image_selector_callback(sender, app_data, app: app):
     )
     # bright image cell
     br_img_cell = dpg_utils.add_texture_to_workspace(
-        img_path_pair.bright, app.texture_ids[0], app.yaxis, True
+        img_path_pair.bright, app.texture_tags[0], app.yaxis, True
     )
     # blue image cell
     bl_img_cell = dpg_utils.add_texture_to_workspace(
-        img_path_pair.blue, app.texture_ids[1], app.yaxis, False
+        img_path_pair.blue, app.texture_tags[1], app.yaxis, False
     )
     # heatmap image cell
     hm_img_cell = dpg_utils.add_image_buff_to_workspace(
-        br_img_cell.size, app.texture_ids[2], app.yaxis, False
+        br_img_cell.size, app.texture_tags[2], app.yaxis, False
     )
 
     dpg.fit_axis_data(app.xaxis)
     dpg.fit_axis_data(app.yaxis)
     # add cell info to app
-    app.gallery.append(br_img_cell)
-    app.gallery.append(bl_img_cell)
-    app.gallery.append(hm_img_cell)
+    app.texture_gallery.append(br_img_cell)
+    app.texture_gallery.append(bl_img_cell)
+    app.texture_gallery.append(hm_img_cell)
     # inform app that the image is loaed
     app.image_loaded = True
     enable_all_items(app)
@@ -120,29 +120,23 @@ def update_blue_offset(sender, app_data, app):
     app.blue_offset[1] = app_data[1]
     # print(app.blue_offset)
     dpg.configure_item(
-        app.gallery[1].image_series_tag,
-        bounds_min=app.gallery[1].loc + app.blue_offset,
-        bounds_max=app.gallery[1].bottom_right() + app.blue_offset,
+        app.texture_gallery[1].image_series_tag,
+        bounds_min=app.texture_gallery[1].loc + app.blue_offset,
+        bounds_max=app.texture_gallery[1].bottom_right() + app.blue_offset,
     )
 
 
 def switch_texture(sender, app_data, app):
     if not check_image_loaded(app):
         return
-    if app_data == "Bright Field":
-        dpg.configure_item(app.gallery[0].image_series_tag, show=True)
-        dpg.configure_item(app.gallery[1].image_series_tag, show=False)
-        dpg.configure_item(app.gallery[2].image_series_tag, show=False)
-    elif app_data == "Blue Field":
-        dpg.configure_item(app.gallery[0].image_series_tag, show=False)
-        dpg.configure_item(app.gallery[1].image_series_tag, show=True)
-        dpg.configure_item(app.gallery[2].image_series_tag, show=False)
-    elif app_data == "Heatmap":
-        dpg.configure_item(app.gallery[0].image_series_tag, show=False)
-        dpg.configure_item(app.gallery[1].image_series_tag, show=False)
-        dpg.configure_item(app.gallery[2].image_series_tag, show=True)
-
-
+    texture_tag = app_data
+    texture_idx = app.texture_tags.index(texture_tag)
+    # disable all textures:
+    for i in range(len(app.texture_gallery)):
+        dpg.configure_item(app.texture_gallery[i].image_series_tag,show=False)
+    # enable target texture
+    dpg.configure_item(app.texture_gallery[texture_idx].image_series_tag,show = True)
+   
 def update_padding(sender, app_data, app):
     app.padding = app_data
 
