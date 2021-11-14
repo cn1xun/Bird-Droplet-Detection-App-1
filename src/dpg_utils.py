@@ -112,3 +112,6 @@ def parse_image_selector_data(app_data):
         img_pair = ImgPathPair(bright=img_path[0], blue=img_path[1])
     elif img_types[0] == "e":
         img_pair = ImgPathPair(bright=img_path[1], blue=img_path[0])
+
+def set_heatmap(predicted_heatmap):
+    dpg.set_value("Heatmap",predicted_heatmap)
