@@ -14,7 +14,7 @@ ImgPathPair = namedtuple("ImgPair", ["bright", "blue"])
 
 
 def image_selector_callback(sender, app_data, app: app):
-    # clear previous images
+    # clear previous images  ------别名已存在
     dpg_utils.clear_drawlist(item_tags.texture_tags)
     dpg_utils.clear_drawlist(item_tags.detection_tags)
     img_keys = []
@@ -62,18 +62,25 @@ def image_selector_callback(sender, app_data, app: app):
         ),
     )
     # bright image cell
-    br_img_cell = dpg_utils.add_texture_to_workspace(
+    # br_img_cell = dpg_utils.add_texture_to_workspace(
+    # img_path_pair.bright, item_tags.texture_tags[0], app.yaxis, True
+    # )
+    br_img_cell ,app.img_size[0] ,app.img_size[1] ,im= dpg_utils.add_texture_to_workspace(
         img_path_pair.bright, item_tags.texture_tags[0], app.yaxis, True
     )
     # blue image cell
-    bl_img_cell = dpg_utils.add_texture_to_workspace(
+    # bl_img_cell = dpg_utils.add_texture_to_workspace(
+    # img_path_pair.blue, item_tags.texture_tags[1], app.yaxis, False
+    # )
+    bl_img_cell ,app.img_size[0] ,app.img_size[1] ,im= dpg_utils.add_texture_to_workspace(
         img_path_pair.blue, item_tags.texture_tags[1], app.yaxis, False
     )
     # heatmap image cell
     hm_img_cell = dpg_utils.add_image_buff_to_workspace(
         br_img_cell.size, item_tags.texture_tags[2], app.yaxis, False, True
     )
-   
+    # get buff_data
+    app.buff_data = im
     # 5 detection types
     for i in range(5):
         app.detection_gallery.append(
@@ -117,8 +124,27 @@ def detect_droplets(sender, app_data, app):
         device=app.target_device,
         verbose=True,
     )
+    app.droplet_num = droplet_num
     print("end detection: {d}".format(d=app.droplet_num))
-
+    # get all droplet_locs
+    all_droplet_locs = utils.droplet_locs(predicted_map,app.img_size[0])
+    # clean_similar_locs
+    print("(app.target_type_names)[app.target_type]:",(app.target_type_names)[app.target_type])
+    app.droplet_dict_locs[(app.target_type_names)[app.target_type]] = utils.clean_similar_locs(all_droplet_locs)
+    print("app.droplet_dict_locs:",app.droplet_dict_locs)
+    # draw rectangle
+    utils.draw_rectangle(
+        buff_data = app.buff_data,
+        texture_name = (item_tags.detection_tags)[app.target_type],
+        droplet_locs = app.droplet_dict_locs[(app.target_type_names)[app.target_type]],
+        rect_color = app.droplet_dict_colors[(app.target_type_names)[app.target_type]],
+        rectangle_size = app.rectangle_size
+        )
+    # set heatmap   ------闪退
+    # dpg_utils.set_heatmap(predicted_heatmap)
+    # setting rect
+    app.setting_rect_group()
+    enable_all_rect_items(app)
 
 def update_blue_offset(sender, app_data, app):
     if not check_image_loaded(app):
@@ -159,11 +185,13 @@ def update_win_size(sender, app_data, app):
 
 
 def swtich_target_type(sender, app_data, app):
-    names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
-    target_type = names.index(app_data)
+    # names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
+    # target_type = names.index(app_data)
+    print(app_data)
+    target_type = app.target_type_names.index(app_data)
     app.target_type = target_type
-
-    print("ctarget type: {d}".format(d=names[app.target_type]))
+    # print("ctarget type: {d}".format(d=names[app.target_type]))
+    print("ctarget type: {d}".format(d=app.target_type_names[app.target_type]))
 
 
 def set_device(sender, app_data, app):
@@ -180,6 +208,30 @@ def enable_all_items(app):
     for key, val in app.item_tag_dict.items():
         dpg.enable_item(val)
 
+def enable_all_rect_items(app):
+    for key, val in app.rect_item_tag_dict.items():
+        print(val)
+        dpg.enable_item(val)
+
+
+# def add_droplet_manually(sender, app_data, app: app):
+#     if dpg.is_item_hovered(item_tags.image_plot_workspace):
+#         mouse_pos = np.array(dpg.get_plot_mouse_pos(), dtype=np.integer)
+#         app.detection_data[app.target_type].append(mouse_pos)
+#         dpg_utils.update_detection_result(app)
+#         # print(app.detection_data)
+
+def set_rect_size(sender, app_data, app):
+    app.rectangle_size = app_data
+    utils.draw_rectangle(
+        buff_data = app.buff_data,
+        texture_name = (item_tags.detection_tags)[app.target_type],
+        droplet_locs = app.droplet_dict_locs[(app.target_type_names)[app.target_type]],
+        rect_color = app.droplet_dict_colors[(app.target_type_names)[app.target_type]],
+        rectangle_size = app.rectangle_size,
+        )
+    print("set_rect_size")
+    return app.rectangle_size
 
 def add_droplet_manually(sender, app_data, app: app):
     if dpg.is_item_hovered(item_tags.image_plot_workspace):
