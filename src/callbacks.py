@@ -233,10 +233,22 @@ def set_rect_size(sender, app_data, app):
     print("set_rect_size")
     return app.rectangle_size
 
-def add_droplet_manually(sender, app_data, app: app):
-    if dpg.is_item_hovered(item_tags.image_plot_workspace):
-        mouse_pos = np.array(dpg.get_plot_mouse_pos(), dtype=np.integer)
-        app.detection_data[app.target_type].append(mouse_pos)
-        dpg_utils.update_detection_result(app)
-        print(app.detection_data)
+def rect_color(sender, app_data, app):
+    new_rect_color = dpg.get_value(sender)
+    color=[]
+    for i in new_rect_color:
+        color.append(int(i))
+    color_tuple = tuple(color)   
+    # print("color_tuple",color_tuple)
+    # add color_tuple to the droplet_dict_colors
+    app.droplet_dict_colors[(app.target_type_names)[app.target_type]] = color_tuple
+    utils.draw_rectangle(
+        buff_data = app.buff_data,
+        texture_name = (item_tags.detection_tags)[app.target_type],
+        droplet_locs = app.droplet_dict_locs[(app.target_type_names)[app.target_type]],
+        rect_color = app.droplet_dict_colors[(app.target_type_names)[app.target_type]],
+        rectangle_size = app.rectangle_size,
+        )
+    # print("rect_color")
+
 

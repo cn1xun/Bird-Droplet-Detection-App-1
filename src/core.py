@@ -125,6 +125,7 @@ class app:
         self.target_type_names = ("Type One", "Type Two", "Type Three", "Type Four", "Type Five")
         self.droplet_dict_locs = {"Type One":None, "Type Two":None, "Type Three":None, "Type Four":None, "Type Five":None}
         self.droplet_dict_num = {"Type One":None, "Type Two":None, "Type Three":None, "Type Four":None, "Type Five":None}
+        self.droplet_dict_colors = {"Type One":"red", "Type Two":"white", "Type Three":"green", "Type Four":"yellow", "Type Five":"blue"}
 
     def __load_models(self):
         for i in range(5):
@@ -283,9 +284,17 @@ class app:
                 user_data=self,
                 enabled=False
                 )
-        dpg.bind_item_handler_registry(
-            item_tags.image_plot_workspace, item_tags.workspace_handler
-        )
+            self.rect_item_tag_dict["rect_color"] = dpg.add_color_picker(
+                label="rectangle color",
+                no_side_preview=True,
+                display_hex=False,
+                callback=callbacks.rect_color,
+                pos=(1200,220),
+                width=280,
+                height=280,
+                user_data=self,
+                enabled=False
+                )        
 
     def launch(self):
         dpg.create_context()
