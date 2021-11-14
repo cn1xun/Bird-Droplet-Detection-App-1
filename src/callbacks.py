@@ -277,4 +277,33 @@ def add_droplet_manually(sender, app_data, app):
             callback=add_droplet,
             user_data=app 
             )
+def delete_droplet_manually(sender, app_data, app):
+    def delete_droplet(sender,data,app):
+        if dpg.is_item_hovered(item_tags.image_plot_workspace): 
+            print("Delete :")
+            # get droplet loc 
+            loc = dpg.get_plot_mouse_pos()
+            list_loc = [[round(loc) for loc in loc]]    # print(locs[0])    [140, 141]
+            try_locs = utils.find_rect_locs(list_loc[0],list_loc,app.rectangle_size)
+            # delete droplet loc
+            for try_loc in try_locs:
+                if try_loc in app.droplet_dict_locs[(app.target_type_names)[app.target_type]]:
+                    print(app.droplet_dict_locs[(app.target_type_names)[app.target_type]])
+                    app.droplet_dict_locs[(app.target_type_names)[app.target_type]].remove(try_loc)
+            print("app.droplet_dict_locs:",app.droplet_dict_locs)
+            utils.draw_rectangle(
+                buff_data = app.buff_data,
+                texture_name = (item_tags.detection_tags)[app.target_type],
+                droplet_locs = app.droplet_dict_locs[(app.target_type_names)[app.target_type]],
+                rect_color = app.droplet_dict_colors[(app.target_type_names)[app.target_type]],
+                rectangle_size = app.rectangle_size,
+                )
+        else:
+            print("Outside the plot")
+    with dpg.handler_registry():
+        dpg.add_mouse_click_handler(
+            button=0,
+            callback=delete_droplet ,
+            user_data=app 
+            )
 

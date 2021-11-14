@@ -883,3 +883,36 @@ def draw_rectangle(buff_data,texture_name,droplet_locs,rect_color,rectangle_size
     # set iamge texture value
     dpg.set_value(texture_name,data)
 
+def clean_similar_locs(droplet_locs,defalut_size = 4):
+    n = 0
+    for loc in droplet_locs:
+        n += 1
+        print("loc",loc,n)
+        pr_locs = []
+        for x in range(1,defalut_size):
+            for y in range(1,defalut_size):
+                pr_locs.append([loc[0]-x,loc[1]])
+                pr_locs.append([loc[0]+x,loc[1]])
+                pr_locs.append([loc[0],loc[1]+y])
+                pr_locs.append([loc[0],loc[1]-y])
+                pr_locs.append([loc[0]-x,loc[1]+y])
+                pr_locs.append([loc[0]+x,loc[1]+y])
+                pr_locs.append([loc[0]-x,loc[1]-y])
+                pr_locs.append([loc[0]+x,loc[1]-y])
+        for pr_loc in pr_locs:
+            if pr_loc in droplet_locs:
+                droplet_locs.remove(pr_loc)   
+    return droplet_locs 
+
+def find_rect_locs(loc,locs,find_size = 6):
+    for x in range(find_size):
+        for y in range(find_size):
+            locs.append([loc[0]-x,loc[1]])
+            locs.append([loc[0]+x,loc[1]])
+            locs.append([loc[0],loc[1]+y])
+            locs.append([loc[0],loc[1]-y])
+            locs.append([loc[0]-x,loc[0]+y])
+            locs.append([loc[0]+x,loc[1]+y])
+            locs.append([loc[0]-x,loc[1]-y])
+            locs.append([loc[0]+x,loc[0]-y])
+    return locs
