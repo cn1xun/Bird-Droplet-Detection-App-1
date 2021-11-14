@@ -251,4 +251,30 @@ def rect_color(sender, app_data, app):
         )
     # print("rect_color")
 
+def add_droplet_manually(sender, app_data, app):
+    def add_droplet(sender,data,app):
+        if dpg.is_item_hovered(item_tags.image_plot_workspace): 
+            print("Add :")
+            # get droplet loc 
+            loc = dpg.get_plot_mouse_pos()
+            list_loc = [round(loc) for loc in loc]
+            # add loc to the droplet_dict_locs
+            app.droplet_dict_locs[(app.target_type_names)[app.target_type]].append(list_loc)
+            utils.draw_rectangle(
+                buff_data = app.buff_data,
+                texture_name = (item_tags.detection_tags)[app.target_type],
+                droplet_locs = app.droplet_dict_locs[(app.target_type_names)[app.target_type]],
+                rect_color = app.droplet_dict_colors[(app.target_type_names)[app.target_type]],
+                rectangle_size = app.rectangle_size,
+                )
+            print("app.droplet_dict_locs:",app.droplet_dict_locs)
+        else:
+            print("Outside the plot")
+
+    with dpg.handler_registry():
+        dpg.add_mouse_click_handler(
+            button=0, 
+            callback=add_droplet,
+            user_data=app 
+            )
 

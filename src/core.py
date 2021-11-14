@@ -284,6 +284,12 @@ class app:
                 user_data=self,
                 enabled=False
                 )
+            self.rect_item_tag_dict["add_droplet_manually"] = dpg.add_button(
+                label="add droplet",
+                callback = callbacks.add_droplet_manually,
+                user_data=self,
+                enabled=False
+                )
             self.rect_item_tag_dict["rect_color"] = dpg.add_color_picker(
                 label="rectangle color",
                 no_side_preview=True,
