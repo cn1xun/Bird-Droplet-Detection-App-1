@@ -141,7 +141,7 @@ def detect_droplets(sender, app_data, app):
         rectangle_size = app.rectangle_size
         )
     # set heatmap   ------闪退
-    # dpg_utils.set_heatmap(predicted_heatmap)
+    dpg_utils.set_heatmap(predicted_heatmap)
     # setting rect
     app.setting_rect_group()
     enable_all_rect_items(app)
