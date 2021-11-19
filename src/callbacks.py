@@ -145,6 +145,7 @@ def detect_droplets(sender, app_data, app):
     # setting rect
     app.setting_rect_group()
     enable_all_rect_items(app)
+    dpg.show_item("setting rect group")
 
 def update_blue_offset(sender, app_data, app):
     if not check_image_loaded(app):

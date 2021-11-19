@@ -272,8 +272,8 @@ class app:
     #     dpg.bind_item_handler_registry(
     #         item_tags.image_plot_workspace, item_tags.workspace_handler
     #     )
-    def setting_rect_group(self):
-        with dpg.group(tag="setting rect group",parent=item_tags.main_window,pos=(650,460)):
+    def __setting_rect_group(self):
+        with dpg.group(tag="setting rect group",parent=item_tags.main_window,pos=(650,460),show=False):
             self.rect_item_tag_dict["rect_size"] = dpg.add_slider_int(
                 label="rectangle size",
                 width=200,
@@ -314,7 +314,7 @@ class app:
         self.__load_models()
         self.__set_font()
         self.__create_ui_layout()
-        self.handler_registry()
+        self.__setting_rect_group()
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window(item_tags.main_window, True)
