@@ -844,10 +844,9 @@ def binary_droplet_detection_heatmap(
     return droplet_densitymap
 
 def droplet_locs(predicted_map,w):
-    cell_bool = predicted_map > 0
-    locs = np.where(cell_bool)
-    x_locs = w - locs[0] + 4
-    y_locs = locs[1] -10
+    tuple_locs = np.where(predicted_map > 0)
+    x_locs = w - tuple_locs[0] 
+    y_locs = tuple_locs[1] 
     list_x_locs = x_locs.tolist()
     list_y_locs = y_locs.tolist()
     locs = []
@@ -877,11 +876,9 @@ def draw_rectangle(buff_data,texture_name,droplet_locs,rect_color,rectangle_size
         # set outline
         im_draw.rectangle((x1, y1, x2, y2), outline=rect_color, width=1)
     im = im.transpose(Image.FLIP_TOP_BOTTOM)
-    im.save('detect_img.png')
-    im = os.path.join(os.getcwd(),'detect_img.png')
-    width, height, channels, data = dpg.load_image(im)
+    im_data = np.asarray(im)
     # set iamge texture value
-    dpg.set_value(texture_name,data)
+    dpg.set_value(texture_name,im_data)
 
 def clean_similar_locs(droplet_locs,defalut_size = 4):
     n = 0
